@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos visuales premium corregidos sin comentarios internos
+# Estilos visuales premium corregidos (Texto grande: Azul / Subtítulo: Blanco)
 st.markdown("""
 <style>
     .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
@@ -128,12 +128,13 @@ with tab_acceso:
                         conn = psycopg2.connect(url_db)
                         cursor = conn.cursor()
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
+                        resultado = cursor.fetchone()
                     else:
                         conn = sqlite3.connect("local_sandbox.db")
                         cursor = conn.cursor()
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=? AND pin_hash=?;", (input_usuario, hash_verificar))
+                        resultado = cursor.fetchone()
                     
-                    resultado = cursor.fetchone()
                     if resultado:
                         st.session_state["auth_rol"] = resultado[0]
                         st.session_state["usuario_activo"] = input_usuario
@@ -141,8 +142,13 @@ with tab_acceso:
                         st.rerun()
                     else:
                         st.error("PIN o usuario incorrectos.")
-                    cursor.close()
-                    conn.close()
+                    
+                    if url_db:
+                        cursor.close()
+                        conn.close()
+                    else:
+                        cursor.close()
+                        conn.close()
                 except Exception as err:
                     st.error(f"Fallo de autenticación: {err}")
     else:
@@ -218,9 +224,3 @@ with tab_consola:
                             cursor = conn.cursor()
                             cursor.execute(
                                 "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
-                                (nuevo_user, nuevo_hash, nuevo_rol)
-                            )
-                        else:
-                            conn = sqlite3.connect("local_sandbox.db")
-                            cursor = conn.cursor()
-                            cursor.execute(
