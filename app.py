@@ -45,7 +45,7 @@ st.html("""
 </style>
 """)
 
-# Inicialización limpia de variables de sesión
+# Inicialización de variables de sesión
 if "auth_rol" not in st.session_state:
     st.session_state["auth_rol"] = None
 if "usuario_activo" not in st.session_state:
@@ -178,7 +178,6 @@ with tab_consola:
     
     if st.session_state["auth_rol"] is not None:
         st.success(f"Autorización Operativa Nivel: {st.session_state['auth_rol']}")
-        
         st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
         st.write("Ejecute flujos de auditoría automatizados en la nube.")
         
@@ -241,3 +240,4 @@ with tab_consola:
         st.table(datos_operaciones)
         
     else:
+        st.warning("⚠️ Modo Sandbox Activo: Inicie sesión para ver la consola empresarial.")
