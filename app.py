@@ -120,7 +120,7 @@ if conn:
 else:
     estado_infraestructura = "DATABASE_URL no configurada"
 
-# LÓGICA AGÉNTICA DE CREWAI
+# LÓGICA AGÉNTICA DE CREWAI PROTEGIDA CONTRA ERRORES DE IMPORTACIÓN
 def ejecutar_flujo_crew(usuario):
     try:
         api_key = os.environ.get("OPENAI_API_KEY")
@@ -128,6 +128,8 @@ def ejecutar_flujo_crew(usuario):
             st.session_state["crew_resultado"] = "Error: Falta la variable OPENAI_API_KEY en Railway."
             return
         os.environ["OPENAI_API_KEY"] = api_key
+        
+        # Importación encapsulada interna para evitar congelar Streamlit
         from crewai import Agent, Task, Crew
         
         auditor = Agent(
@@ -154,7 +156,7 @@ def ejecutar_flujo_crew(usuario):
             cursor.close()
             db_conn.close()
     except Exception as e:
-        st.session_state["crew_resultado"] = f"Fallo operativo en CrewAI: {str(e)}"
+        st.session_state["crew_resultado"] = f"Fallo operativo en CrewAI (Verificar Dependencias): {str(e)}"
     finally:
         st.session_state["crew_ejecutando"] = False
 
@@ -212,7 +214,7 @@ with tab_acceso:
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
                         resultado = cursor.fetchone()
                         if resultado:
-                            st.session_state["auth_rol"] = str(resultado[0])
+                            st.session_state["auth_rol"] = str(resultado)
                             st.session_state["usuario_activo"] = input_usuario
                             cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (input_usuario, "Inicio de sesión centralizado exitoso."))
                             db_conn.commit()
@@ -247,7 +249,4 @@ with tab_acceso:
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
-    # ACCESO SEGURO BASADO ÚNICAMENTE EN LA EXISTENCIA DE LA SESIÓN ACTIVA (INMUNE A TUPLAS)
     if st.session_state["usuario_activo"] is not None:
-        st.success(f"Nivel de Autorización Verificado: {st.session_state['auth_rol']}")
-        
