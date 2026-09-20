@@ -111,8 +111,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # NAVEGACIÓN MODERNA MEDIANTE PESTAÑAS (MÁXIMA ESTABILIDAD)
-tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de 
-
+tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola with tab_portal:
+    # Generación matemática de coordenadas mundiales (Antenas y Satélites fijos)
+    coordenadas_datos = {
+        'lat': [40.7128, 34.0522, 51.5074, 35.6762, -22.9068, -33.8688, 19.4326, 48.8566],
+        'lon': [-74.0060, -118.2437, -0.1278, 139.6503, -43.1729, 151.2093, -99.1332, 2.3522],
+        'Tipo': ['Antena Alfa', 'Satélite Enlace', 'Base Cuántica', 'Estación Delta', 'Antena Omega', 'Satélite Beta', 'Estación Central', 'Enlace Central']
+    }
+    df_mapa = pd.DataFrame(coordenadas_datos)
+    
+    # Renderizado del mapa interactivo global nativo de Streamlit
+    st.map(df_mapa, zoom=1, use_container_width=True)
 # =======================================================================
 # PESTAÑA 2: ACCESO CENTRALIZADO
 # =======================================================================
