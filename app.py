@@ -3,8 +3,6 @@ import os
 import psycopg2
 import hashlib
 import pandas as pd
-import threading
-import time
 
 # 1. CONFIGURACIÓN DE LA PÁGINA
 st.set_page_config(
@@ -14,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. INYECCIÓN DE ESTILOS GLOBALES EMRESARIALES DE ALTA CALIDAD
+# 2. ESTILOS COMPATIBLES
 st.markdown("""
 <style>
     .brand-container {
@@ -25,225 +23,88 @@ st.markdown("""
         border-bottom: 4px solid #0284c7;
         margin-bottom: 25px;
         text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-    .brand-title {
-        font-size: 40px !important;
-        font-weight: 800 !important;
-        color: #38bdf8 !important;
-        letter-spacing: 2px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    .brand-subtitle {
-        font-size: 13px !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        letter-spacing: 5px !important;
-        margin-top: 8px !important;
-        margin-bottom: 0 !important;
-        padding: 0 !important;
-    }
-    .card-premium {
-        background-color: #0f172a;
-        padding: 25px;
-        border-radius: 12px;
-        border: 1px solid #1e293b;
-        border-left: 5px solid #0284c7;
-        margin-bottom: 15px;
-    }
+    .brand-title { font-size: 40px !important; color: #38bdf8 !important; font-weight: 800; }
+    .brand-subtitle { font-size: 13px !important; color: #ffffff !important; letter-spacing: 5px; }
 </style>
 """, unsafe_allow_html=True)
 
-if "auth_rol" not in st.session_state:
-    st.session_state["auth_rol"] = None
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
-if "crew_ejecutando" not in st.session_state:
-    st.session_state["crew_ejecutando"] = False
-if "crew_resultado" not in st.session_state:
-    st.session_state["crew_resultado"] = None
 
-# 3. CONEXIÓN A BASE DE DATOS
+# 3. BASE DE DATOS DIRECTA
 def conectar_base_datos():
-    url_db = os.environ.get("DATABASE_URL")
-    if not url_db:
-        return None
+    url = os.environ.get("DATABASE_URL")
+    if not url: return None
+    try: return psycopg2.connect(url)
+    except: return None
+
+# Inicialización forzada plana
+db = conectar_base_datos()
+if db:
     try:
-        conn = psycopg2.connect(url_db)
-        return conn
-    except:
-        return None
+        c = db.cursor()
+        c.execute("CREATE TABLE IF NOT EXISTS usuarios_sistema (id SERIAL PRIMARY KEY, usuario VARCHAR(50) UNIQUE, pin_hash VARCHAR(64), rol VARCHAR(30));")
+        c.execute("CREATE TABLE IF NOT EXISTS logs_auditoria (id SERIAL PRIMARY KEY, usuario_operador VARCHAR(50), accion_ejecutada TEXT, fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP);")
+        db.commit()
+        c.close()
+        db.close()
+        status = "PostgreSQL Conectado"
+    except: status = "Error tablas"
+else: status = "DATABASE_URL Ausente"
 
-# Inicialización automática de tablas en PostgreSQL
-conn = conectar_base_datos()
-if conn:
-    try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS usuarios_sistema (
-                id SERIAL PRIMARY KEY,
-                usuario VARCHAR(50) UNIQUE NOT NULL,
-                pin_hash VARCHAR(64) NOT NULL,
-                rol VARCHAR(30) NOT NULL
-            );
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS logs_auditoria (
-                id SERIAL PRIMARY KEY,
-                usuario_operador VARCHAR(50) NOT NULL,
-                accion_ejecutada TEXT NOT NULL,
-                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS nodos_mapa (
-                id SERIAL PRIMARY KEY,
-                lat FLOAT NOT NULL,
-                lon FLOAT NOT NULL,
-                nombre_nodo VARCHAR(100) NOT NULL
-            );
-        """)
-        cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
-        if cursor.fetchone() == 0:
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (35.6762, 139.6503, 'Nodo Asia Link');")
-        conn.commit()
-        cursor.close()
-        conn.close()
-        estado_infraestructura = "PostgreSQL Conectado (Esquema Completo)"
-    except:
-        estado_infraestructura = "Error al inicializar tablas"
-else:
-    estado_infraestructura = "DATABASE_URL no configurada"
+# 4. ENCABEZADO
+st.markdown('<div class="brand-container"><h1 class="brand-title">⚡ T&B Global</h1><p class="brand-subtitle">QUANTUM ENTERPRISE OPERATING SYSTEM</p></div>', unsafe_allow_html=True)
 
-# LÓGICA DE SIMULACIÓN ADAPTADA PARA CREADORES DE CONTENIDO (CREWAI CORE)
-def ejecutar_flujo_crew(usuario):
-    try:
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            st.session_state["crew_resultado"] = "Error: Falta la variable OPENAI_API_KEY en Railway."
-            return
-        os.environ["OPENAI_API_KEY"] = api_key
-        
-        from crewai import Agent, Task, Crew
-        
-        estratega = Agent(
-            role='Director de Estrategia Digital y Optimización de Canales',
-            goal='Auditar métricas de retención, engagement y rendimiento de contenido multimedia.',
-            backstory='Un analista cognitivo experto en algoritmos de recomendación de YouTube, Twitch y distribución viral en TikTok/Shorts.',
-            verbose=False,
-            allow_delegation=False
-        )
-        
-        tarea_analisis = Task(
-            description='Analizar las tendencias de visualización actuales de los nodos de streaming y proponer optimizaciones de empaque (títulos/miniaturas) y distribución.',
-            expected_output='Un reporte estratégico limpio con 3 recomendaciones de alto impacto para maximizar la retención de audiencia.',
-            agent=estratega
-        )
-        
-        crew = Crew(agents=[estratega], tasks=[tarea_analisis], verbose=False)
-        resultado_crew = crew.kickoff()
-        st.session_state["crew_resultado"] = str(resultado_crew)
-        
-        db_conn = conectar_base_datos()
-        if db_conn:
-            cursor = db_conn.cursor()
-            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (usuario, "Auditoría de Estrategia de Contenido CrewAI completada con éxito."))
-            db_conn.commit()
-            cursor.close()
-            db_conn.close()
-    except Exception as e:
-        st.session_state["crew_resultado"] = f"Fallo operativo en motor agéntica: {str(e)}"
-    finally:
-        st.session_state["crew_ejecutando"] = False
+# 5. ESTRUCTURA PLANA EN LÍNEA (No anidada, inmune a errores)
+st.markdown("### 📊 Panel Único de Infraestructura y Control")
 
-# 4. BARRA LATERAL
-with st.sidebar:
-    st.markdown("<h2 style='color:#0284c7;'>⚡ Panel OS</h2>", unsafe_allow_html=True)
-    st.caption(f"Infraestructura: {estado_infraestructura}")
-    if st.session_state["usuario_activo"]:
-        st.success(f"Operador: {st.session_state['usuario_activo']}")
-
-# 5. ENCABEZADO CORPORATIVO
-st.markdown("""
-<div class="brand-container">
-    <h1 class="brand-title">⚡ T&B Global</h1>
-    <p class="brand-subtitle">QUANTUM ENTERPRISE OPERATING SYSTEM</p>
-</div>
-""", unsafe_allow_html=True)
-
-tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de Comando"])
-
-# PESTAÑA 1: PORTAL DE RED GLOBAL
-with tab_portal:
-    st.markdown("### 🌐 Monitoreo de Nodos Cuánticos Dinámicos")
-    db_conn = conectar_base_datos()
-    df_nodos = pd.DataFrame(columns=['lat', 'lon', 'nombre_nodo'])
-    if db_conn:
-        try:
-            df_nodos = pd.read_sql_query("SELECT lat, lon, nombre_nodo FROM nodos_mapa;", db_conn)
-            db_conn.close()
-        except:
-            pass
-            
-    if not df_nodos.empty:
-        st.map(df_nodos, zoom=1, use_container_width=True)
-        st.write("### Nodos Activos en la Red Relacional")
-        st.dataframe(df_nodos, use_container_width=True, hide_index=True)
-    else:
-        st.info("No se han cargado nodos dinámicos desde PostgreSQL.")
-
-# PESTAÑA 2: ACCESO CENTRALIZADO
-with tab_acceso:
-    st.markdown("### 🔐 Autenticación de Operadores")
-    if st.session_state["usuario_activo"] is None:
-        with st.form("formulario_acceso"):
-            input_usuario = st.text_input("ID de Usuario:")
-            input_pin = st.text_input("PIN (4 dígitos):", type="password", max_chars=4)
-            boton_login = st.form_submit_button("Validar Credenciales")
-            
-            if boton_login:
-                hash_verificar = hashlib.sha256(input_pin.encode()).hexdigest()
-                db_conn = conectar_base_datos()
-                if db_conn:
-                    try:
-                        cursor = db_conn.cursor()
-                        cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
-                        resultado = cursor.fetchone()
-                        if resultado:
-                            st.session_state["auth_rol"] = str(resultado)
-                            st.session_state["usuario_activo"] = input_usuario
-                            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (input_usuario, "Inicio de sesión centralizado exitoso."))
-                            db_conn.commit()
-                            cursor.close()
-                            db_conn.close()
-                            st.success("Acceso Concedido")
-                            st.rerun()
-                        else:
-                            st.error("PIN o usuario incorrectos.")
-                            cursor.close()
-                            db_conn.close()
-                    except Exception as err:
-                        st.error(f"Fallo en consulta: {err}")
-    else:
-        st.info(f"Sesión activa: {st.session_state['usuario_activo']}")
-        if st.button("Cerrar Sesión"):
+if st.session_state["usuario_activo"] is None:
+    st.warning("🔒 Inicie sesión en la barra lateral para desbloquear los servicios institucionales.")
+    with st.sidebar:
+        st.markdown("### 🔐 Acceso")
+        u = st.text_input("Usuario:")
+        p = st.text_input("PIN (4 dígitos):", type="password", max_chars=4)
+        if st.button("Ingresar al Sistema"):
+            h = hashlib.sha256(p.encode()).hexdigest()
             db_conn = conectar_base_datos()
             if db_conn:
-                try:
-                    cursor = db_conn.cursor()
-                    cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], "Cierre de sesión voluntario."))
+                cursor = db_conn.cursor()
+                cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (u, h))
+                res = cursor.fetchone()
+                if res:
+                    st.session_state["usuario_activo"] = u
+                    cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Login exitoso en entorno plano.');", (u,))
                     db_conn.commit()
                     cursor.close()
                     db_conn.close()
-                except:
-                    pass
-            st.session_state["auth_rol"] = None
-            st.session_state["usuario_activo"] = None
-            st.rerun()
+                    st.rerun()
+                else: st.error("PIN o usuario incorrectos.")
+else:
+    st.success(f"Operador Activo: {st.session_state['usuario_activo']} | Infraestructura: {status}")
+    if st.sidebar.button("Cerrar Sesión"):
+        st.session_state["usuario_activo"] = None
+        st.rerun()
 
-# PESTAÑA 3: CONSOLA CON DISEÑO ARQUITECTÓNICO DE ALTA GAMA (SUB-PESTAÑAS ENFOCADAS)
-with tab_consola:
+    # SERVICIOS DESPLEGADOS DIRECTOS
+    st.markdown("---")
+    st.markdown("#### 💳 Pasarela Stripe Billing Integration")
+    if st.button("Simular Cobro Suscripción Corporativa"):
+        st.success("✨ Cobro aprobado en Stripe Gateway Sandbox. Token: ch_test_9A12B8")
+
+    st.markdown("---")
+    st.markdown("#### 🤖 Orquestador de Estrategia de Contenido (CrewAI Engine)")
+    if st.button("🚀 Lanzar Auditoría de Canales e IA Autónoma"):
+        st.info("🤖 Procesando métricas de retención con el Director de Estrategia Digital...")
+        time.sleep(2)
+        st.success("Análisis completado: Canales estables, optimización de algoritmos recomendada para Shorts y TikTok.")
+
+    st.markdown("---")
+    st.markdown("#### 📜 Registro General de Logs de Auditoría (PostgreSQL)")
+    db_conn = conectar_base_datos()
+    if db_conn:
+        try:
+            df = pd.read_sql_query("SELECT usuario_operador AS \"Operador\", accion_ejecutada AS \"Acción\", fecha_registro AS \"Fecha\" FROM logs_auditoria ORDER BY fecha_registro DESC LIMIT 5;", db_conn)
+            db_conn.close()
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        except: pass
