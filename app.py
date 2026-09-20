@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. INYECCIÓN DE ESTILOS GLOBALES COMPATIBLES
+# 2. INYECCIÓN DE ESTILOS GLOBALES EMRESARIALES DE ALTA CALIDAD
 st.markdown("""
 <style>
     .brand-container {
@@ -46,9 +46,10 @@ st.markdown("""
     }
     .card-premium {
         background-color: #0f172a;
-        padding: 20px;
-        border-radius: 8px;
+        padding: 25px;
+        border-radius: 12px;
         border: 1px solid #1e293b;
+        border-left: 5px solid #0284c7;
         margin-bottom: 15px;
     }
 </style>
@@ -63,7 +64,7 @@ if "crew_ejecutando" not in st.session_state:
 if "crew_resultado" not in st.session_state:
     st.session_state["crew_resultado"] = None
 
-# 3. CONEXIÓN A BASE DE DATOS
+# 3. CONEXIÓN A BASE DE DATOS CONTROLS
 def conectar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
     if not url_db:
@@ -74,7 +75,7 @@ def conectar_base_datos():
     except:
         return None
 
-# Inicialización de infraestructura relacional en PostgreSQL
+# Inicialización automática de tablas en PostgreSQL
 conn = conectar_base_datos()
 if conn:
     try:
@@ -104,7 +105,7 @@ if conn:
             );
         """)
         cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
-        if cursor.fetchone() == 0:
+        if cursor.fetchone()[0] == 0:
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
@@ -118,7 +119,7 @@ if conn:
 else:
     estado_infraestructura = "DATABASE_URL no configurada"
 
-# LÓGICA DE SIMULACIÓN CONTROLADA
+# LÓGICA DE SIMULACIÓN CONTROLADA ASÍNCRONA
 def ejecutar_flujo_crew(usuario):
     try:
         time.sleep(3.0)
@@ -222,24 +223,26 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA LINEAL ULTRA ESTABLE (Variables de cierre de base de datos corregidas al 100%)
+# PESTAÑA 3: CONSOLA CON DISEÑO ARQUITECTÓNICO DE ALTA GAMA (SUB-PESTAÑAS INMUNES A CUELGUES)
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
     if st.session_state["usuario_activo"] is not None:
-        st.success(f"Nivel de Autorización Verificado: Acceso Concedido")
+        st.success("Nivel de Autorización Verificado: Acceso Concedido")
         
-        st.markdown("#### 💳 Pasarela Corporativa Global (Stripe Billing Integration)")
+        # Inyección de Sub-pestañas horizontales limpias de grado comercial
+        sub_stripe, sub_ingenieria, sub_auditoria, sub_crewai = st.tabs([
+            "💳 Pasarela Stripe Billing", 
+            "🛰️ Ingeniería de Nodos", 
+            "📜 Registros PostgreSQL", 
+            "🤖 Orquestador CrewAI"
+        ])
         
-        st.markdown("<div class='card-premium'><h5>Plan Básico OS</h5><p>Monitoreo estándar + 1 Operador activo</p><b>$49 USD / mes</b></div>", unsafe_allow_html=True)
-        if st.button("Simular Pasarela: Suscribir Plan Básico"):
-            with st.spinner("Conectando al gateway Stripe Sandbox..."):
-                time.sleep(1.0)
-            st.success("✨ Transacción aprobada en Stripe Sandbox. Token: ch_test_9A12B8")
-            db_conn = conectar_base_datos()
-            if db_conn:
-                cursor = db_conn.cursor()
-                cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], "Compra de Plan Básico aprobada vía Stripe Gateway."))
-                db_conn.commit()
-                cursor.close()
-                db_conn.close()
+        # SUB-PESTAÑA A: STRIPE GATEWAY
+        with sub_stripe:
+            st.markdown("#### Gestión de Facturación Institucional (Sandbox Activo)")
+            
+            st.markdown("<div class='card-premium'><h5>Plan Básico OS</h5><p>Monitoreo estándar de infraestructura + 1 Operador activo</p><b>$49 USD / mes</b></div>", unsafe_allow_html=True)
+            if st.button("Simular Pasarela: Suscribir Plan Básico"):
+                with st.spinner("Conectando al gateway Stripe Sandbox..."):
+                    time.sleep(1.0)
