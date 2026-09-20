@@ -131,7 +131,10 @@ def sanitizar_entrada(texto):
 if "auth_rol" not in st.session_state: st.session_state["auth_rol"] = None
 if "user_token" not in st.session_state: st.session_state["user_token"] = None
 
-""", unsafe_allow_html=True)
+
+
+
+
 
     
     
