@@ -111,18 +111,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # NAVEGACIÓN MODERNA MEDIANTE PESTAÑAS (MÁXIMA ESTABILIDAD)
-tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de Comando"])
-
-# =======================================================================
-# PESTAÑA 1: PORTAL DE RED GLOBAL
-# =======================================================================
-with tab_portal:
-    try:
-        with open("mundo.html", "r", encoding="utf-8") as f:
-            codigo_mundo = f.read()
-        st.components.v1.html(codigo_mundo, height=410)
-    except Exception as e:
-        st.error(f"Error en telecomunicaciones: {e}")
+tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de 
 
 # =======================================================================
 # PESTAÑA 2: ACCESO CENTRALIZADO
