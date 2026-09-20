@@ -34,7 +34,6 @@ st.markdown("""
         letter-spacing: 2px !important;
         margin: 0 !important;
         padding: 0 !important;
-        font-family: 'Inter', sans-serif !important;
     }
     .brand-subtitle {
         font-size: 13px !important;
@@ -44,7 +43,6 @@ st.markdown("""
         margin-top: 8px !important;
         margin-bottom: 0 !important;
         padding: 0 !important;
-        font-family: 'Inter', sans-serif !important;
     }
     .card-premium {
         background-color: #0f172a;
@@ -120,7 +118,7 @@ if conn:
 else:
     estado_infraestructura = "DATABASE_URL no configurada"
 
-# LÓGICA DE SIMULACIÓN PARA EVITAR CAÍDAS DE MEMORIA CLOUD
+# LÓGICA DE SIMULACIÓN CONTROLADA
 def ejecutar_flujo_crew(usuario):
     try:
         time.sleep(3.0)
@@ -224,22 +222,24 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO REESTRUCTURADA (FALLES ELIMINADAS)
+# PESTAÑA 3: CONSOLA LINEAL ULTRA ESTABLE (COLUMNAS ELIMINADAS)
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
     if st.session_state["usuario_activo"] is not None:
         st.success(f"Nivel de Autorización Verificado: Acceso Concedido")
         
-        # 1. PASARELA STRIPE PRIMERO (Inmune a bloqueos)
+        # 1. STRIPE PASARELA (Estructura de tarjetas vertical simple)
         st.markdown("#### 💳 Pasarela Corporativa Global (Stripe Billing Integration)")
-        col_st1, col_st2 = st.columns(2)
-        with col_st1:
-            st.markdown("<div class='card-premium'><h5>Plan Básico OS</h5><p>Monitoreo estándar + 1 Operador activo</p><b>$49 USD / mes</b></div>", unsafe_allow_html=True)
-            if st.button("Simular Pasarela: Suscribir Plan Básico"):
-                with st.spinner("Conectando al gateway Stripe Sandbox..."):
-                    time.sleep(1.2)
-                st.success("✨ Transacción aprobada en Stripe Sandbox. Token: ch_test_9A12B8")
-                db_conn = conectar_base_datos()
-                if db_conn:
-                    cursor = db_conn.cursor()
+        
+        st.markdown("<div class='card-premium'><h5>Plan Básico OS</h5><p>Monitoreo estándar + 1 Operador activo</p><b>$49 USD / mes</b></div>", unsafe_allow_html=True)
+        if st.button("Simular Pasarela: Suscribir Plan Básico"):
+            with st.spinner("Conectando al gateway Stripe Sandbox..."):
+                time.sleep(1.0)
+            st.success("✨ Transacción aprobada en Stripe Sandbox. Token: ch_test_9A12B8")
+            db_conn = conectar_base_datos()
+            if db_conn:
+                cursor = db_conn.cursor()
+                cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], "Compra de Plan Básico aprobada vía Stripe Gateway."))
+                db_conn.commit()
+                cursor.close()
