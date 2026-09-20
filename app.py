@@ -12,18 +12,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos visuales premium (Logo en Azul / Subtítulo en Blanco)
+# Estilos visuales premium generales
 st.markdown("""
 <style>
     .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
-    .logo-header {
-        background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
-        padding: 25px; border-radius: 8px; border: 1px solid #1e293b;
-        border-bottom: 4px solid #0284c7; margin-bottom: 20px;
-        text-align: center;
+    .card-modulo {
+        background: #0f172a; padding: 20px; border-radius: 8px;
+        border: 1px solid #1e293b; border-left: 4px solid #0284c7; margin-bottom: 15px;
     }
-    .logo-text { font-size: 38px; font-weight: 800; color: #0284c7; letter-spacing: 1px; margin: 0; }
-    .logo-sub { font-size: 14px; color: #ffffff; font-weight: 600; letter-spacing: 4px; margin: 5px 0 0 0; }
+    .status-success { color: #10b981; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,17 +61,17 @@ with st.sidebar:
     if st.session_state["usuario_activo"]:
         st.success(f"Operador: {st.session_state['usuario_activo']}")
 
-# 4. ENCABEZADO
+# 4. ENCABEZADO (CON COLORES FIJOS CORREGIDOS: AZUL Y BLANCO)
 st.markdown("""
-<div class='logo-header'>
-    <h1 class='logo-text'>⚡ T&B Global</h1>
-    <p class='logo-sub'>QUANTUM ENTERPRISE OPERATING SYSTEM</p>
+<div style="background: linear-gradient(135deg, #0f172a 0%, #020617 100%); padding: 25px; border-radius: 8px; border: 1px solid #1e293b; border-bottom: 4px solid #0284c7; margin-bottom: 20px; text-align: center;">
+    <h1 style="color: #0284c7 !important; font-size: 38px; font-weight: 800; letter-spacing: 1px; margin: 0;">⚡ T&B Global</h1>
+    <p style="color: #ffffff !important; font-size: 14px; font-weight: 600; letter-spacing: 4px; margin: 5px 0 0 0;">QUANTUM ENTERPRISE OPERATING SYSTEM</p>
 </div>
 """, unsafe_allow_html=True)
 
 tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de Comando"])
 
-# PESTAÑA 1
+# PESTAÑA 1: PORTAL DE RED GLOBAL
 with tab_portal:
     st.markdown("### 🌐 Monitoreo de Nodos")
     coordenadas_datos = {
@@ -83,7 +80,7 @@ with tab_portal:
     }
     st.map(pd.DataFrame(coordenadas_datos), zoom=1, use_container_width=True)
 
-# PESTAÑA 2
+# PESTAÑA 2: ACCESO CENTRALIZADO
 with tab_acceso:
     st.markdown("### 🔐 Autenticación")
     if st.session_state["auth_rol"] is None:
@@ -104,7 +101,7 @@ with tab_acceso:
                         cursor.close()
                         conn.close()
                         if resultado:
-                            st.session_state["auth_rol"] = resultado[0]
+                            st.session_state["auth_rol"] = resultado
                             st.session_state["usuario_activo"] = input_usuario
                             st.success("Acceso Concedido")
                             st.rerun()
@@ -119,7 +116,7 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3
+# PESTAÑA 3: CONSOLA DE COMANDO
 with tab_consola:
     st.markdown("### 📊 Consola de Comando")
     if st.session_state["auth_rol"] is not None:
