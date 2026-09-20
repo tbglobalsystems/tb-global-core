@@ -192,7 +192,5 @@ with tab_consola:
             "Estado": ["Operando (Fernet Activo)", "Conectado (Cloud)", "Durmiente", "Modo Pruebas Listo"],
             "Carga": ["4%", "12%", "0%", "Listo"]
         })
-        st.table(datos_operaciones)
-    else:
-    st.warning("⚠️ Acceso Restringido. Inicie sesión primero en la pestaña
-
+        st.table(st.table(datos_operaciones)
+    st.table(datos_operaciones)
