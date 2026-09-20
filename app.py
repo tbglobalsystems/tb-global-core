@@ -54,7 +54,6 @@ st.html("""
 </style>
 """)
 
-# Inicialización limpia de variables de sesión
 if "auth_rol" not in st.session_state:
     st.session_state["auth_rol"] = None
 if "usuario_activo" not in st.session_state:
@@ -75,7 +74,7 @@ def conectar_base_datos():
     except:
         return None
 
-# Inicialización automática de tablas en PostgreSQL
+# Inicialización de infraestructura relacional en PostgreSQL
 conn = conectar_base_datos()
 if conn:
     try:
@@ -104,28 +103,27 @@ if conn:
                 nombre_nodo VARCHAR(100) NOT NULL
             );
         """)
-        # Insertar nodos de prueba si la tabla está vacía
         cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
         if cursor.fetchone()[0] == 0:
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifco US');")
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (35.6762, 139.6503, 'Nodo Asia Link');")
         conn.commit()
         cursor.close()
         conn.close()
         estado_infraestructura = "PostgreSQL Conectado (Esquema Completo)"
-    except:
-        estado_infraestructura = "Error al inicializar tablas"
+    except Exception as e:
+        estado_infraestructura = f"Error al inicializar tablas"
 else:
     estado_infraestructura = "DATABASE_URL no configurada"
 
-# FUNCIÓN HILO ASÍNCRONO CREWAI
+# LÓGICA AGÉNTICA DE CREWAI
 def ejecutar_flujo_crew(usuario):
     try:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            st.session_state["crew_resultado"] = "Error: Falta OPENAI_API_KEY en Railway."
+            st.session_state["crew_resultado"] = "Error: Falta la variable OPENAI_API_KEY en Railway."
             return
         os.environ["OPENAI_API_KEY"] = api_key
         from crewai import Agent, Task, Crew
@@ -149,7 +147,7 @@ def ejecutar_flujo_crew(usuario):
         db_conn = conectar_base_datos()
         if db_conn:
             cursor = db_conn.cursor()
-            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (usuario, f"Auditoría CrewAI completada con éxito."))
+            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (usuario, "Auditoría CrewAI completada de forma óptima."))
             db_conn.commit()
             cursor.close()
             db_conn.close()
@@ -212,7 +210,9 @@ with tab_acceso:
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
                         resultado = cursor.fetchone()
                         if resultado:
-                            st.session_state["auth_rol"] = str(resultado[0])
+                            # Limpieza absoluta de tuplas de texto de PostgreSQL
+                            rol_limpio = str(resultado[0]).replace("(", "").replace(")", "").replace("'", "").replace(",", "")
+                            st.session_state["auth_rol"] = rol_limpio
                             st.session_state["usuario_activo"] = input_usuario
                             cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (input_usuario, "Inicio de sesión centralizado exitoso."))
                             db_conn.commit()
@@ -227,7 +227,7 @@ with tab_acceso:
                     except Exception as err:
                         st.error(f"Fallo en consulta: {err}")
     else:
-        st.info(f"Sesión activa: {st.session_state['usuario_activo']} [{st.session_state['auth_rol']}]")
+        st.info(f"Sesión activa: {st.session_state['usuario_activo']}")
         if st.button("Cerrar Sesión"):
             db_conn = conectar_base_datos()
             if db_conn:
@@ -243,12 +243,10 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO (PRODUCCIÓN TOTAL COMPLETA)
+# PESTAÑA 3: CONSOLA DE COMANDO INTERACTIVA COMPLETADA
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
     if st.session_state["auth_rol"] is not None:
         st.success(f"Nivel de Autorización Verificado: {st.session_state['auth_rol']}")
         
-        # SUB-SECCIÓN 1: AI ORQUESTACIÓN
-        st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
