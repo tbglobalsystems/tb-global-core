@@ -142,7 +142,7 @@ if st.session_state["auth_rol"] is None:
             <h1 class='logo-text' style='font-size: 42px;'>⚡ T&B Global</h1>
             <p class='logo-sub' style='font-size: 16px; letter-spacing: 4px;'>Quantum Enterprise Operating System</p>
         </div>
-    """, unsafe_html=True)
+    """, unsafe_allow_html=True)
     
     col_izq, col_centro, col_der = st.columns([1, 1.2, 1])
     with col_centro:
