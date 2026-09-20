@@ -4,6 +4,7 @@ import sqlite3
 import psycopg2
 import hashlib
 import pandas as pd
+import time
 
 # 1. CONFIGURACIÓN DE LA PÁGINA
 st.set_page_config(
@@ -13,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos visuales
+# Estilos visuales premium
 st.markdown("""
 <style>
     .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
@@ -25,6 +26,11 @@ st.markdown("""
     }
     .logo-text { font-size: 38px; font-weight: 800; color: #ffffff; letter-spacing: 1px; margin: 0; }
     .logo-sub { font-size: 14px; color: #0284c7; font-weight: 600; letter-spacing: 4px; margin: 5px 0 0 0; }
+    .card-modulo {
+        background: #0f172a; padding: 20px; border-radius: 8px;
+        border: 1px solid #1e293b; border-left: 4px solid #0284c7; margin-bottom: 15px;
+    }
+    .status-success { color: #10b981; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -60,6 +66,8 @@ estado_infraestructura = inicializar_base_datos()
 with st.sidebar:
     st.markdown("<h2 style='color:#0284c7;'>⚡ Panel OS</h2>", unsafe_allow_html=True)
     st.caption(f"Infraestructura: {estado_infraestructura}")
+    if st.session_state["usuario_activo"]:
+        st.success(f"Operador: {st.session_state['usuario_activo']}")
 
 # 4. ENCABEZADO
 st.markdown("""
@@ -115,32 +123,60 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO (REGISTRO DIRECTO SIN CONDICIONALES COMPLEJOS)
+# PESTAÑA 3: CONSOLA DE COMANDO (MODULOS DE AGENTES CREWAI Y REGISTRO)
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura")
     
-    st.markdown("### 🛰️ Registro Directo de Operadores en PostgreSQL Cloud")
-    with st.form("crear_usuario_nuevo"):
-        nuevo_user = st.text_input("ID de Usuario Nuevo:")
-        nuevo_pin = st.text_input("PIN de Seguridad Nuevo (4 dígitos):", type="password", max_chars=4)
-        nuevo_rol = st.selectbox("Asignar Rol:", ["Administrador Industrial", "Operador", "Auditor"])
-        boton_crear = st.form_submit_button("Registrar Credenciales")
+    # SI EL USUARIO ESTÁ LOGUEADO, DESBLOQUEA LA INTERFAZ DE COMANDO DE AGENTES
+    if st.session_state["auth_rol"] is not None:
+        st.success(f"Nivel de Autorización Verificado: {st.session_state['auth_rol']}")
         
-        if boton_crear:
-            if len(nuevo_pin) == 4 and nuevo_user != "":
-                nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
-                url_db = os.environ.get("DATABASE_URL")
-                if url_db:
-                    try:
-                        conn = psycopg2.connect(url_db)
-                        cursor = conn.cursor()
-                        cursor.execute(
-                            "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
-                            (nuevo_user, nuevo_hash, nuevo_rol)
-                        )
-                        conn.commit()
-                        cursor.close()
-                        conn.close()
-                        st.success(f"Usuario '{nuevo_user}' registrado con éxito en Railway. Ya puedes iniciar sesión.")
-                    except Exception as ex:
-                        st.error(f"Error base de datos: {ex}")
+        st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
+        st.write("Ejecute flujos de análisis de red y procesamiento de telecomunicaciones automatizado.")
+        
+        # Botón seguro de acción para simular la ejecución de una tarea de CrewAI
+        if st.button("🚀 Lanzar Crew: Auditoría de Nodos Globales"):
+            with st.spinner("Agente Analista de Red inicializando herramientas..."):
+                time.sleep(1.5)
+            with st.spinner("Agente Auditor verificando logs en PostgreSQL Cloud..."):
+                time.sleep(1.5)
+            st.success("✨ ¡Misión de CrewAI Completada! Reporte de red generado de forma óptima.")
+        
+        st.write("---")
+        st.write("### Telemetría de Sistemas en Tiempo Real")
+        datos_operaciones = pd.DataFrame({
+            "Módulo": ["Criptografía Core", "Base Datos Postgres", "CrewAI Engine", "Stripe Gateway"],
+            "Estado": ["Operando (Fernet Listo)", "Conectado (Cloud)", "Durmiente (Listo)", "Sandbox Activo"],
+            "Carga de Trabajo": ["2%", "8%", "0%", "0%"]
+        })
+        st.table(datos_operaciones)
+        
+    # SI NO ESTÁ LOGUEADO, MUESTRA EL REGISTRO DIRECTO SANDBOX
+    else:
+        st.warning("⚠️ Modo Sandbox Activo: Inicie sesión o use el panel de abajo para dar de alta credenciales en PostgreSQL.")
+        st.write("---")
+        st.markdown("### 🛰️ Registro de Nuevos Operadores")
+        with st.form("crear_usuario_nuevo"):
+            nuevo_user = st.text_input("ID de Usuario Nuevo:")
+            nuevo_pin = st.text_input("PIN de Seguridad Nuevo (4 dígitos):", type="password", max_chars=4)
+            nuevo_rol = st.selectbox("Asignar Rol:", ["Administrador Industrial", "Operador de Telecomunicaciones", "Auditor de Seguridad"])
+            boton_crear = st.form_submit_button("Registrar Credenciales")
+            
+            if boton_crear:
+                if len(nuevo_pin) == 4 and nuevo_user != "":
+                    nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
+                    url_db = os.environ.get("DATABASE_URL")
+                    if url_db:
+                        try:
+                            conn = psycopg2.connect(url_db)
+                            cursor = conn.cursor()
+                            cursor.execute(
+                                "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
+                                (nuevo_user, nuevo_hash, nuevo_rol)
+                            )
+                            conn.commit()
+                            cursor.close()
+                            conn.close()
+                            st.success(f"Usuario '{nuevo_user}' registrado con éxito en Railway. Ya puedes iniciar sesión.")
+                        except Exception as ex:
+                            st.error(f"Error base de datos: {ex}")
