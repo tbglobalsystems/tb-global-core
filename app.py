@@ -128,7 +128,6 @@ def ejecutar_flujo_crew(usuario):
             return
         os.environ["OPENAI_API_KEY"] = api_key
         
-        # Importación protegida
         from crewai import Agent, Task, Crew
         
         estratega = Agent(
@@ -157,7 +156,7 @@ def ejecutar_flujo_crew(usuario):
             cursor.close()
             db_conn.close()
     except Exception as e:
-        st.session_state["crew_resultado"] = f"Fallo operativo en motor agéntico: {str(e)}"
+        st.session_state["crew_resultado"] = f"Fallo operativo en motor agéntica: {str(e)}"
     finally:
         st.session_state["crew_ejecutando"] = False
 
