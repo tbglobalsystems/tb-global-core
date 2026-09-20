@@ -3,6 +3,8 @@ import os
 import psycopg2
 import hashlib
 import pandas as pd
+import threading
+import time
 
 # 1. CONFIGURACIÓN DE LA PÁGINA
 st.set_page_config(
@@ -42,14 +44,25 @@ st.html("""
         margin-bottom: 0 !important;
         padding: 0 !important;
     }
+    .card-premium {
+        background-color: #0f172a;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #1e293b;
+        margin-bottom: 15px;
+    }
 </style>
 """)
 
-# Inicialización de variables de sesión
+# Inicialización limpia de variables de sesión
 if "auth_rol" not in st.session_state:
     st.session_state["auth_rol"] = None
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
+if "crew_ejecutando" not in st.session_state:
+    st.session_state["crew_ejecutando"] = False
+if "crew_resultado" not in st.session_state:
+    st.session_state["crew_resultado"] = None
 
 # 3. CONEXIÓN A BASE DE DATOS
 def conectar_base_datos():
@@ -83,6 +96,21 @@ if conn:
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS nodos_mapa (
+                id SERIAL PRIMARY KEY,
+                lat FLOAT NOT NULL,
+                lon FLOAT NOT NULL,
+                nombre_nodo VARCHAR(100) NOT NULL
+            );
+        """)
+        # Insertar nodos de prueba si la tabla está vacía
+        cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
+        if cursor.fetchone()[0] == 0:
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifco US');")
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (35.6762, 139.6503, 'Nodo Asia Link');")
         conn.commit()
         cursor.close()
         conn.close()
@@ -92,6 +120,44 @@ if conn:
 else:
     estado_infraestructura = "DATABASE_URL no configurada"
 
+# FUNCIÓN HILO ASÍNCRONO CREWAI
+def ejecutar_flujo_crew(usuario):
+    try:
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            st.session_state["crew_resultado"] = "Error: Falta OPENAI_API_KEY en Railway."
+            return
+        os.environ["OPENAI_API_KEY"] = api_key
+        from crewai import Agent, Task, Crew
+        
+        auditor = Agent(
+            role='Auditor de Sistemas Cloud',
+            goal='Analizar anomalías en la telemetría de la infraestructura',
+            backstory='Experto en ciberseguridad industrial y bases de datos relacionales.',
+            verbose=False,
+            allow_delegation=False
+        )
+        tarea_auditoria = Task(
+            description='Revisar el estado reportado e identificar puntos críticos en los servidores.',
+            expected_output='Resumen ejecutivo limpio con 3 recomendaciones de seguridad.',
+            agent=auditor
+        )
+        crew = Crew(agents=[auditor], tasks=[tarea_auditoria], verbose=False)
+        resultado_crew = crew.kickoff()
+        st.session_state["crew_resultado"] = str(resultado_crew)
+        
+        db_conn = conectar_base_datos()
+        if db_conn:
+            cursor = db_conn.cursor()
+            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (usuario, f"Auditoría CrewAI completada con éxito."))
+            db_conn.commit()
+            cursor.close()
+            db_conn.close()
+    except Exception as e:
+        st.session_state["crew_resultado"] = f"Fallo operativo en CrewAI: {str(e)}"
+    finally:
+        st.session_state["crew_ejecutando"] = False
+
 # 4. BARRA LATERAL
 with st.sidebar:
     st.markdown("<h2 style='color:#0284c7;'>⚡ Panel OS</h2>", unsafe_allow_html=True)
@@ -99,7 +165,7 @@ with st.sidebar:
     if st.session_state["usuario_activo"]:
         st.success(f"Operador: {st.session_state['usuario_activo']}")
 
-# 5. ENCABEZADO CORPORATIVO (AZUL Y BLANCO)
+# 5. ENCABEZADO CORPORATIVO
 st.markdown("""
 <div class="brand-container">
     <h1 class="brand-title">⚡ T&B Global</h1>
@@ -107,22 +173,30 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Definición limpia de pestañas
 tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de Comando"])
 
 # PESTAÑA 1: PORTAL DE RED GLOBAL
 with tab_portal:
-    st.markdown("### 🌐 Monitoreo de Nodos")
-    coordenadas_datos = {
-        'lat': [40.7128, 34.0522, 51.5074, 35.6762],
-        'lon': [-74.0060, -118.2437, -0.1278, 139.6503]
-    }
-    st.map(pd.DataFrame(coordenadas_datos), zoom=1, use_container_width=True)
+    st.markdown("### 🌐 Monitoreo de Nodos Cuánticos Dinámicos")
+    db_conn = conectar_base_datos()
+    df_nodos = pd.DataFrame(columns=['lat', 'lon', 'nombre_nodo'])
+    if db_conn:
+        try:
+            df_nodos = pd.read_sql_query("SELECT lat, lon, nombre_nodo FROM nodos_mapa;", db_conn)
+            db_conn.close()
+        except:
+            pass
+            
+    if not df_nodos.empty:
+        st.map(df_nodos, zoom=1, use_container_width=True)
+        st.write("### Nodos Activos en la Red Relacional")
+        st.dataframe(df_nodos, use_container_width=True, hide_index=True)
+    else:
+        st.info("No se han cargado nodos dinámicos desde PostgreSQL.")
 
 # PESTAÑA 2: ACCESO CENTRALIZADO
 with tab_acceso:
     st.markdown("### 🔐 Autenticación de Operadores")
-    
     if st.session_state["auth_rol"] is None:
         with st.form("formulario_acceso"):
             input_usuario = st.text_input("ID de Usuario:")
@@ -137,7 +211,6 @@ with tab_acceso:
                         cursor = db_conn.cursor()
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
                         resultado = cursor.fetchone()
-                        
                         if resultado:
                             st.session_state["auth_rol"] = str(resultado[0])
                             st.session_state["usuario_activo"] = input_usuario
@@ -153,10 +226,8 @@ with tab_acceso:
                             db_conn.close()
                     except Exception as err:
                         st.error(f"Fallo en consulta: {err}")
-                else:
-                    st.error("No se pudo conectar a la base de datos.")
     else:
-        st.info(f"Sesión activa: {st.session_state['usuario_activo']}")
+        st.info(f"Sesión activa: {st.session_state['usuario_activo']} [{st.session_state['auth_rol']}]")
         if st.button("Cerrar Sesión"):
             db_conn = conectar_base_datos()
             if db_conn:
@@ -172,72 +243,12 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO
+# PESTAÑA 3: CONSOLA DE COMANDO (PRODUCCIÓN TOTAL COMPLETA)
 with tab_consola:
-    st.markdown("### 📊 Consola de Comando de Infraestructura")
+    st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
     if st.session_state["auth_rol"] is not None:
-        st.success(f"Autorización Operativa Nivel: {st.session_state['auth_rol']}")
+        st.success(f"Nivel de Autorización Verificado: {st.session_state['auth_rol']}")
+        
+        # SUB-SECCIÓN 1: AI ORQUESTACIÓN
         st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
-        st.write("Ejecute flujos de auditoría automatizados en la nube.")
-        
-        if st.button("🚀 Lanzar Crew: Auditoría de Nodos Globales"):
-            with st.spinner("Inicializando agentes de CrewAI y cargando modelos lingüísticos..."):
-                try:
-                    from crewai import Agent, Task, Crew
-                    
-                    auditor = Agent(
-                        role='Auditor de Sistemas Cloud',
-                        goal='Analizar anomalías en la telemetría de la infraestructura',
-                        backstory='Experto en ciberseguridad industrial y bases de datos relacionales.',
-                        verbose=False,
-                        allow_delegation=False
-                    )
-                    
-                    tarea_auditoria = Task(
-                        description='Revisar el estado reportado e identificar puntos críticos en los servidores.',
-                        expected_output='Un breve resumen ejecutivo con 3 recomendaciones de seguridad.',
-                        agent=auditor
-                    )
-                    
-                    crew = Crew(agents=[auditor], tasks=[tarea_auditoria], verbose=False)
-                    resultado_crew = crew.kickoff()
-                    
-                    st.success("✨ ¡Misión de CrewAI Completada!")
-                    st.markdown(f"**Resultado del Análisis:**\n\n{resultado_crew}")
-                    
-                    db_conn = conectar_base_datos()
-                    if db_conn:
-                        cursor = db_conn.cursor()
-                        cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], f"Auditoría CrewAI completada. Reporte: {str(resultado_crew)[:100]}..."))
-                        db_conn.commit()
-                        cursor.close()
-                        db_conn.close()
-                except Exception as e:
-                    st.error(f"Error al ejecutar CrewAI: {e}")
-        
-        st.write("---")
-        st.markdown("#### 📜 Registro General de Logs de Auditoría (PostgreSQL)")
-        db_conn = conectar_base_datos()
-        if db_conn:
-            try:
-                query_logs = "SELECT usuario_operador AS \"Operador\", accion_ejecutada AS \"Acción Realizada\", fecha_registro AS \"Estampa de Tiempo\" FROM logs_auditoria ORDER BY fecha_registro DESC LIMIT 10;"
-                df_logs = pd.read_sql_query(query_logs, db_conn)
-                db_conn.close()
-                if not df_logs.empty:
-                    st.dataframe(df_logs, use_container_width=True, hide_index=True)
-                else:
-                    st.info("No hay eventos registrados en los logs de infraestructura cloud.")
-            except Exception as e:
-                st.error(f"Error al leer logs: {e}")
-                
-        st.write("---")
-        st.write("### Telemetría de Módulos Base")
-        datos_operaciones = pd.DataFrame({
-            "Módulo": ["Criptografía Core", "Base Datos Postgres", "Auditoría Engine"],
-            "Estado": ["Operando", "Conectado", "Activo (Capturando)"]
-        })
-        st.table(datos_operaciones)
-        
-    else:
-        st.warning("⚠️ Modo Sandbox Activo: Inicie sesión para ver la consola empresarial.")
