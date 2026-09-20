@@ -14,8 +14,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. INYECCIÓN DE ESTILOS GLOBALES DE ALTA CALIDAD
-st.html("""
+# 2. INYECCIÓN DE ESTILOS GLOBALES COMPATIBLES (Fijados con markdown seguro)
+st.markdown("""
 <style>
     .brand-container {
         background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
@@ -34,6 +34,7 @@ st.html("""
         letter-spacing: 2px !important;
         margin: 0 !important;
         padding: 0 !important;
+        font-family: 'Inter', sans-serif !important;
     }
     .brand-subtitle {
         font-size: 13px !important;
@@ -43,6 +44,7 @@ st.html("""
         margin-top: 8px !important;
         margin-bottom: 0 !important;
         padding: 0 !important;
+        font-family: 'Inter', sans-serif !important;
     }
     .card-premium {
         background-color: #0f172a;
@@ -52,7 +54,7 @@ st.html("""
         margin-bottom: 15px;
     }
 </style>
-""")
+""", unsafe_allow_html=True)
 
 if "auth_rol" not in st.session_state:
     st.session_state["auth_rol"] = None
@@ -113,8 +115,8 @@ if conn:
         cursor.close()
         conn.close()
         estado_infraestructura = "PostgreSQL Conectado (Esquema Completo)"
-    except Exception as e:
-        estado_infraestructura = f"Error al inicializar tablas"
+    except:
+        estado_infraestructura = "Error al inicializar tablas"
 else:
     estado_infraestructura = "DATABASE_URL no configurada"
 
@@ -245,9 +247,7 @@ with tab_acceso:
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
-    # Validamos si la sesión está activa de forma flexible e inmune a tuplas
     if st.session_state["auth_rol"] is not None:
         st.success(f"Nivel de Autorización Verificado: {st.session_state['auth_rol']}")
         
         # 1. ORQUESTACIÓN CREWAI
-        st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
