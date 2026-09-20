@@ -146,4 +146,70 @@ if st.session_state["auth_rol"] is None:
     
     col_izq, col_centro, col_der = st.columns([1, 1.2, 1])
     with col_centro:
+       flex; justify-content: center; align-items: center; background: #030407; padding: 15px; border-radius: 12px;">
+<canvas id="canvasTelecom" width="380" height="380" style="background: transparent;"></canvas>
+<script>
+    const canvas = document.getElementById('canvasTelecom'); const ctx = canvas.getContext('2d');
+    let rotacion = 0; let tiempo = 0;
+    
+    const antenasMundiales = [
+        {x: -40, y: -30}, {x: 50, y: -20}, 
+        {x: -10, y: 40}, {x: 45, y: 35}
+    ];
+
+    function renderSistema() {
+        ctx.clearRect(0, 0, 380, 380); ctx.save(); ctx.translate(190, 190);
+        tiempo += 0.03; rotacion += 0.003;
+
+        let gradAtmosfera = ctx.createRadialGradient(0, 0, 95, 0, 0, 135);
+        gradAtmosfera.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
+        gradAtmosfera.addColorStop(1, 'rgba(3, 4, 7, 0)');
+        ctx.fillStyle = gradAtmosfera; ctx.beginPath(); ctx.arc(0, 0, 135, 0, Math.PI * 2); ctx.fill();
+
+        let gradOceano = ctx.createRadialGradient(-25, -25, 15, 0, 0, 105);
+        gradOceano.addColorStop(0, '#1d4ed8'); gradOceano.addColorStop(0.7, '#0f172a'); gradOceano.addColorStop(1, '#020617');
+        ctx.fillStyle = gradOceano; ctx.beginPath(); ctx.arc(0, 0, 105, 0, Math.PI * 2); ctx.fill();
+
+        ctx.save(); ctx.rotate(rotacion); ctx.fillStyle = 'rgba(34, 197, 94, 0.8)';
+        const tierras = [[-45, -35, 30], [30, -45, 35], [-20, 30, 40], [-60, 15, 15]];
+        tierras.forEach(t => { ctx.beginPath(); ctx.arc(t, t, t, 0, Math.PI * 2); ctx.fill(); });
+        ctx.restore();
+
+        let gradSombra = ctx.createRadialGradient(35, 35, 85, 0, 0, 105);
+        gradSombra.addColorStop(0, 'rgba(0,0,0,0)'); gradSombra.addColorStop(1, 'rgba(0,0,0,0.85)');
+        ctx.fillStyle = gradSombra; ctx.beginPath(); ctx.arc(0, 0, 105, 0, Math.PI * 2); ctx.fill();
+
+        let orbitaA = tiempo * 0.4;
+        let satAX = 145 * Math.cos(orbitaA); let satAY = 40 * Math.sin(orbitaA);
+        ctx.save(); ctx.rotate(Math.PI / 6);
+        ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.arc(satAX, satAY, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#38bdf8'; ctx.fillRect(satAX - 11, satAY - 1.5, 6, 3); ctx.fillRect(satAX + 5, satAY - 1.5, 6, 3);
         
+        if (Math.sin(tiempo * 2) > 0) {
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)'; ctx.lineWidth = 1; ctx.beginPath();
+            ctx.moveTo(satAX, satAY); ctx.lineTo(0, 0); ctx.stroke();
+        }
+        ctx.restore();
+
+        let orbitaB = -tiempo * 0.3;
+        let satBX = 155 * Math.cos(orbitaB); let satBY = 30 * Math.sin(orbitaB);
+        ctx.save(); ctx.rotate(-Math.PI / 12);
+        ctx.fillStyle = '#f1f5f9'; ctx.beginPath(); ctx.arc(satBX, satBY, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#10b981'; ctx.fillRect(satBX - 10, satBY - 1, 5, 2); ctx.fillRect(satBX + 5, satBY - 1, 5, 2);
+        
+        antenasMundiales.forEach(ant => {
+            if (Math.cos(tiempo + ant.x) > 0.2) {
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.35)'; ctx.lineWidth = 1.2; ctx.beginPath();
+                ctx.moveTo(satBX, satBY); ctx.lineTo(ant.x, ant.y); ctx.stroke();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'; ctx.beginPath();
+                ctx.arc(ant.x, ant.y, 2.5, 0, Math.PI * 2); ctx.fill();
+            }
+        });
+        ctx.restore();
+
+        ctx.restore(); requestAnimationFrame(renderSistema);
+    }
+    renderSistema();
+</script>
+</div>
+""" 
