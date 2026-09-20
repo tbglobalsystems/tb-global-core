@@ -147,38 +147,4 @@ if st.session_state["auth_rol"] is None:
     col_izq, col_centro, col_der = st.columns([1, 1.2, 1])
     with col_centro:
         html_mundo_3d = """
-        <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 25px;">
-            <canvas id="canvas_tb_global" width="400" height="400" style="background: transparent; cursor: grab;"></canvas>
-        </div>
-        <script>
-            const canvas = document.getElementById('canvas_tb_global');
-            const ctx = canvas.getContext('2d');
-            let rotacion = 0; let orbitaSatelite = 0;
-            function dibujarGlobo() {
-                ctx.clearRect(0, 0, 400, 400);
-                const centroX = 200; const centroY = 200; const radio = 140;
-                let gradienteAtmosfera = ctx.createRadialGradient(centroX, centroY, radio - 10, centroX, centroY, radio + 15);
-                gradienteAtmosfera.addColorStop(0, 'rgba(2, 132, 199, 0.2)'); gradienteAtmosfera.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                ctx.fillStyle = gradienteAtmosfera; ctx.beginPath(); ctx.arc(centroX, centroY, radio + 15, 0, Math.PI * 2); ctx.fill();
-                let gradienteOceano = ctx.createRadialGradient(centroX - 40, centroY - 40, 10, centroX, centroY, radio);
-                gradienteOceano.addColorStop(0, '#0f172a'); gradienteOceano.addColorStop(1, '#020617');
-                ctx.fillStyle = gradienteOceano; ctx.beginPath(); ctx.arc(centroX, centroY, radio, 0, Math.PI * 2); ctx.fill();
-                ctx.save(); ctx.beginPath(); ctx.arc(centroX, centroY, radio, 0, Math.PI * 2); ctx.clip();
-                ctx.fillStyle = 'rgba(56, 189, 248, 0.85)'; rotacion += 0.004;
-                for (let i = -1; i < 3; i++) {
-                    let posX = (i * 220 + (rotacion * 120)) % 440 - 60;
-                    ctx.beginPath(); ctx.ellipse(posX, centroY - 20, 75, 95, 0.15, 0, Math.PI * 2);
-                    ctx.ellipse(posX + 110, centroY + 40, 60, 50, -0.1, 0, Math.PI * 2); ctx.fill();
-                }
-                ctx.strokeStyle = 'rgba(2, 132, 199, 0.15)'; ctx.lineWidth = 1;
-                for (let j = 1; j < 6; j++) { ctx.beginPath(); ctx.ellipse(centroX, centroY, radio, j * 25, 0, 0, Math.PI * 2); ctx.stroke(); }
-                ctx.restore();
-                let satX = (radio + 35) * Math.cos(orbitaSatelite); let satY = 30 * Math.sin(orbitaSatelite);
-        ctx.fillStyle = '#f8fafc'; ctx.fillRect(satX - 4, satY - 4, 8, 8); ctx.fillStyle = '#38bdf8'; ctx.fillRect(satX - 12, satY - 1, 7, 2); ctx.fillRect(satX + 5, satY - 1, 7, 2);
-        ctx.restore(); requestAnimationFrame(dibujarGlobo);
-    }
-    dibujarGlobo();
-</script>
-</div>
-"""
-st.components.v1.html(html_mundo_3d, height=420)
+        
