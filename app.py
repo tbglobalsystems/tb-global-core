@@ -210,9 +210,7 @@ with tab_acceso:
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
                         resultado = cursor.fetchone()
                         if resultado:
-                            # Limpieza absoluta de tuplas de texto de PostgreSQL
-                            rol_limpio = str(resultado[0]).replace("(", "").replace(")", "").replace("'", "").replace(",", "")
-                            st.session_state["auth_rol"] = rol_limpio
+                            st.session_state["auth_rol"] = str(resultado[0])
                             st.session_state["usuario_activo"] = input_usuario
                             cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (input_usuario, "Inicio de sesión centralizado exitoso."))
                             db_conn.commit()
@@ -247,6 +245,9 @@ with tab_acceso:
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
+    # Validamos si la sesión está activa de forma flexible e inmune a tuplas
     if st.session_state["auth_rol"] is not None:
         st.success(f"Nivel de Autorización Verificado: {st.session_state['auth_rol']}")
         
+        # 1. ORQUESTACIÓN CREWAI
+        st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
