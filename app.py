@@ -4,7 +4,7 @@ import psycopg2
 import hashlib
 import pandas as pd
 
-# 1. CONFIGURACIÓN
+# 1. CONFIGURACIÓN DE LA PÁGINA
 st.set_page_config(
     page_title="T&B Global - Enterprise OS",
     page_icon="⚡",
@@ -12,24 +12,53 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos visuales premium generales
-st.markdown("""
+# Inyección de estilos globales de alta calidad para anular el tema nativo de Streamlit
+st.html("""
 <style>
-    .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
-    .card-modulo {
-        background: #0f172a; padding: 20px; border-radius: 8px;
-        border: 1px solid #1e293b; border-left: 4px solid #0284c7; margin-bottom: 15px;
+    /* Estilización del contenedor del logotipo */
+    .brand-container {
+        background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+        padding: 30px;
+        border-radius: 12px;
+        border: 1px solid #1e293b;
+        border-bottom: 4px solid #0284c7;
+        margin-bottom: 25px;
+        text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
-    .status-success { color: #10b981; font-weight: bold; }
+    
+    /* Fuerza el color Azul Corporativo Brillante en el título principal */
+    .brand-title {
+        font-size: 40px !important;
+        font-weight: 800 !important;
+        color: #38bdf8 !important;
+        letter-spacing: 2px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    
+    /* Fuerza el color Blanco Puro en el subtítulo institucional */
+    .brand-subtitle {
+        font-size: 13px !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        letter-spacing: 5px !important;
+        margin-top: 8px !important;
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+        opacity: 0.95 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 if "auth_rol" not in st.session_state:
     st.session_state["auth_rol"] = None
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
-# 2. BASE DE DATOS
+# 2. CONEXIÓN A BASE DE DATOS
 def inicializar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
     if not url_db:
@@ -61,11 +90,11 @@ with st.sidebar:
     if st.session_state["usuario_activo"]:
         st.success(f"Operador: {st.session_state['usuario_activo']}")
 
-# 4. ENCABEZADO (CON COLORES FIJOS CORREGIDOS: AZUL Y BLANCO)
+# 4. ENCABEZADO CORPORATIVO ESTRUCTURADO CON CLASES DE ALTO CONTRASTE
 st.markdown("""
-<div style="background: linear-gradient(135deg, #0f172a 0%, #020617 100%); padding: 25px; border-radius: 8px; border: 1px solid #1e293b; border-bottom: 4px solid #0284c7; margin-bottom: 20px; text-align: center;">
-    <h1 style="color: #0284c7 !important; font-size: 38px; font-weight: 800; letter-spacing: 1px; margin: 0;">⚡ T&B Global</h1>
-    <p style="color: #ffffff !important; font-size: 14px; font-weight: 600; letter-spacing: 4px; margin: 5px 0 0 0;">QUANTUM ENTERPRISE OPERATING SYSTEM</p>
+<div class="brand-container">
+    <h1 class="brand-title">⚡ T&B Global</h1>
+    <p class="brand-subtitle">QUANTUM ENTERPRISE OPERATING SYSTEM</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -101,7 +130,7 @@ with tab_acceso:
                         cursor.close()
                         conn.close()
                         if resultado:
-                            st.session_state["auth_rol"] = resultado
+                            st.session_state["auth_rol"] = resultado[0]
                             st.session_state["usuario_activo"] = input_usuario
                             st.success("Acceso Concedido")
                             st.rerun()
@@ -152,8 +181,8 @@ with tab_consola:
                             conn.commit()
                             cursor.close()
                             conn.close()
-                            st.success(f"Usuario {nuevo_user} registrado.")
+                            st.success(f"Usuario {nuevo_user} registrado con éxito.")
                         except Exception as err:
                             st.error(f"Error db: {err}")
                 else:
-                    st.error("Datos invalidos.")
+                    st.error("Datos inválidos.")
