@@ -196,4 +196,36 @@ with tab_consola:
         })
         st.table(datos_operaciones)
     else:
-        st.warning("⚠️ Acceso Restringido. Inicie sesión primero en la pestaña 'Acceso Centralizado'.")
+        st.warning("⚠️ Modo Sandbox Activo: Inicie sesión o use el panel de abajo para dar de alta credenciales en PostgreSQL.")
+        
+        st.write("---")
+        st.markdown("### 🛰️ Registro de Nuevos Operadores (Acceso de Infraestructura)")
+        with st.form("crear_usuario_nuevo"):
+            nuevo_user = st.text_input("Definir ID de Usuario Corporativo:", placeholder="Ej: admin_tb")
+            nuevo_pin = st.text_input("Definir PIN de Seguridad (4 dígitos):", type="password", max_chars=4)
+            nuevo_rol = st.selectbox("Asignar Rol del Sistema:", ["Administrador Industrial", "Operador de Telecomunicaciones", "Auditor de Seguridad"])
+            boton_crear = st.form_submit_button("Registrar Credenciales en PostgreSQL Cloud")
+            
+            if boton_crear:
+                if len(nuevo_pin) == 4 and nuevo_user != "":
+                    nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
+                    url_db = os.environ.get("DATABASE_URL")
+                    
+                    try:
+                        if url_db:
+                            conn = psycopg2.connect(url_db)
+                            cursor = conn.cursor()
+                            cursor.execute(
+                                "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
+                                (nuevo_user, nuevo_hash, nuevo_rol)
+                            )
+                            conn.commit()
+                            cursor.close()
+                            conn.close()
+                            st.success(f"¡Usuario '{nuevo_user}' registrado con éxito en la nube de Railway! Ya puedes ir a loguearte.")
+                        else:
+                            st.error("No se detectó la variable DATABASE_URL en el servidor.")
+                    except Exception as ex:
+                        st.error(f"Error al escribir en la base de datos: {ex}")
+                else:
+                    st.error("Por favor, ingresa un ID válido y un PIN de
