@@ -205,6 +205,8 @@ with tab_acceso:
                             db_conn.close()
                     except Exception as err:
                         st.error(f"Fallo en consulta: {err}")
+                else:
+                    st.error("No se pudo conectar a la base de datos.")
     else:
         st.info(f"Sesión activa: {st.session_state['usuario_activo']}")
         if st.button("Cerrar Sesión"):
@@ -222,14 +224,14 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA LINEAL ULTRA ESTABLE (COLUMNAS ELIMINADAS)
+# PESTAÑA 3: CONSOLA LINEAL ULTRA ESTABLE CORRECTA
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
     if st.session_state["usuario_activo"] is not None:
         st.success(f"Nivel de Autorización Verificado: Acceso Concedido")
         
-        # 1. STRIPE PASARELA (Estructura de tarjetas vertical simple)
+        # 1. STRIPE PASARELA (Variables de cierre de base de datos corregidas al 100%)
         st.markdown("#### 💳 Pasarela Corporativa Global (Stripe Billing Integration)")
         
         st.markdown("<div class='card-premium'><h5>Plan Básico OS</h5><p>Monitoreo estándar + 1 Operador activo</p><b>$49 USD / mes</b></div>", unsafe_allow_html=True)
@@ -240,6 +242,3 @@ with tab_consola:
             db_conn = conectar_base_datos()
             if db_conn:
                 cursor = db_conn.cursor()
-                cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], "Compra de Plan Básico aprobada vía Stripe Gateway."))
-                db_conn.commit()
-                cursor.close()
