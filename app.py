@@ -64,7 +64,7 @@ if "crew_ejecutando" not in st.session_state:
 if "crew_resultado" not in st.session_state:
     st.session_state["crew_resultado"] = None
 
-# 3. CONEXIÓN A BASE DE DATOS CONTROLS
+# 3. CONEXIÓN A BASE DE DATOS
 def conectar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
     if not url_db:
@@ -105,7 +105,7 @@ if conn:
             );
         """)
         cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
-        if cursor.fetchone()[0] == 0:
+        if cursor.fetchone() == 0:
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
@@ -119,22 +119,45 @@ if conn:
 else:
     estado_infraestructura = "DATABASE_URL no configurada"
 
-# LÓGICA DE SIMULACIÓN CONTROLADA ASÍNCRONA
+# LÓGICA DE SIMULACIÓN ADAPTADA PARA CREADORES DE CONTENIDO (CREWAI CORE)
 def ejecutar_flujo_crew(usuario):
     try:
-        time.sleep(3.0)
-        resultado_simulado = "Análisis del Sistema completado de forma óptima.\n1. Nodos globales estables.\n2. Conexiones PostgreSQL seguras.\n3. Latencia dentro de los parámetros."
-        st.session_state["crew_resultado"] = resultado_simulado
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            st.session_state["crew_resultado"] = "Error: Falta la variable OPENAI_API_KEY en Railway."
+            return
+        os.environ["OPENAI_API_KEY"] = api_key
+        
+        # Importación protegida
+        from crewai import Agent, Task, Crew
+        
+        estratega = Agent(
+            role='Director de Estrategia Digital y Optimización de Canales',
+            goal='Auditar métricas de retención, engagement y rendimiento de contenido multimedia.',
+            backstory='Un analista cognitivo experto en algoritmos de recomendación de YouTube, Twitch y distribución viral en TikTok/Shorts.',
+            verbose=False,
+            allow_delegation=False
+        )
+        
+        tarea_analisis = Task(
+            description='Analizar las tendencias de visualización actuales de los nodos de streaming y proponer optimizaciones de empaque (títulos/miniaturas) y distribución.',
+            expected_output='Un reporte estratégico limpio con 3 recomendaciones de alto impacto para maximizar la retención de audiencia.',
+            agent=estratega
+        )
+        
+        crew = Crew(agents=[estratega], tasks=[tarea_analisis], verbose=False)
+        resultado_crew = crew.kickoff()
+        st.session_state["crew_resultado"] = str(resultado_crew)
         
         db_conn = conectar_base_datos()
         if db_conn:
             cursor = db_conn.cursor()
-            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (usuario, "Auditoría automatizada del ecosistema ejecutada con éxito."))
+            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (usuario, "Auditoría de Estrategia de Contenido CrewAI completada con éxito."))
             db_conn.commit()
             cursor.close()
             db_conn.close()
     except Exception as e:
-        st.session_state["crew_resultado"] = f"Fallo operativo: {str(e)}"
+        st.session_state["crew_resultado"] = f"Fallo operativo en motor agéntico: {str(e)}"
     finally:
         st.session_state["crew_ejecutando"] = False
 
@@ -223,26 +246,5 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA CON DISEÑO ARQUITECTÓNICO DE ALTA GAMA (SUB-PESTAÑAS INMUNES A CUELGUES)
+# PESTAÑA 3: CONSOLA CON DISEÑO ARQUITECTÓNICO DE ALTA GAMA (SUB-PESTAÑAS ENFOCADAS)
 with tab_consola:
-    st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
-    
-    if st.session_state["usuario_activo"] is not None:
-        st.success("Nivel de Autorización Verificado: Acceso Concedido")
-        
-        # Inyección de Sub-pestañas horizontales limpias de grado comercial
-        sub_stripe, sub_ingenieria, sub_auditoria, sub_crewai = st.tabs([
-            "💳 Pasarela Stripe Billing", 
-            "🛰️ Ingeniería de Nodos", 
-            "📜 Registros PostgreSQL", 
-            "🤖 Orquestador CrewAI"
-        ])
-        
-        # SUB-PESTAÑA A: STRIPE GATEWAY
-        with sub_stripe:
-            st.markdown("#### Gestión de Facturación Institucional (Sandbox Activo)")
-            
-            st.markdown("<div class='card-premium'><h5>Plan Básico OS</h5><p>Monitoreo estándar de infraestructura + 1 Operador activo</p><b>$49 USD / mes</b></div>", unsafe_allow_html=True)
-            if st.button("Simular Pasarela: Suscribir Plan Básico"):
-                with st.spinner("Conectando al gateway Stripe Sandbox..."):
-                    time.sleep(1.0)
