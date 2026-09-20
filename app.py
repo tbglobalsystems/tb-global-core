@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Inyección de estilos globales de alta calidad (Anula tema nativo de Streamlit)
+# Inyección de estilos globales de alta calidad
 st.html("""
 <style>
     .brand-container {
@@ -50,7 +50,7 @@ if "auth_rol" not in st.session_state:
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
-# 2. CONEXIÓN Y CREACIÓN DE TABLAS (USUARIOS + AUDITORÍA)
+# 2. CONEXIÓN Y CREACIÓN DE TABLAS
 def inicializar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
     if not url_db:
@@ -137,7 +137,6 @@ with tab_acceso:
                             st.session_state["auth_rol"] = resultado[0]
                             st.session_state["usuario_activo"] = input_usuario
                             
-                            # Insertar Log de Inicio de Sesión exitoso
                             cursor.execute(
                                 "INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);",
                                 (input_usuario, "Inicio de sesión centralizado exitoso.")
@@ -156,7 +155,6 @@ with tab_acceso:
     else:
         st.info(f"Sesión activa: {st.session_state['usuario_activo']}")
         if st.button("Cerrar Sesión"):
-            # Registrar log de salida antes de limpiar sesión
             url_db = os.environ.get("DATABASE_URL")
             if url_db:
                 try:
@@ -169,26 +167,24 @@ with tab_acceso:
                     conn.commit()
                     cursor.close()
                     conn.close()
-                except:
+                except Exception:
                     pass
             st.session_state["auth_rol"] = None
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO (CON MÓDULO DE LOGS DE AUDITORÍA EN TIEMPO REAL)
+# PESTAÑA 3: CONSOLA DE COMANDO
 with tab_consola:
     st.markdown("### 📊 Consola de Comando")
     
     if st.session_state["auth_rol"] is not None:
         st.success(f"Autorización Operativa Nivel: {st.session_state['auth_rol']}")
         
-        # Herramienta Nueva: Tabla Dinámica de Logs Vivos en la Nube
         st.markdown("#### 📜 Registro General de Logs de Auditoría (PostgreSQL)")
         url_db = os.environ.get("DATABASE_URL")
         if url_db:
             try:
                 conn = psycopg2.connect(url_db)
-                # Lee directamente los datos de la base de datos y los convierte en un DataFrame estructurado
                 query_logs = "SELECT usuario_operador AS \"Operador\", accion_ejecutada AS \"Acción Realizada\", fecha_registro AS \"Estampa de Tiempo\" FROM logs_auditoria ORDER BY fecha_registro DESC LIMIT 10;"
                 df_logs = pd.read_sql_query(query_logs, conn)
                 conn.close()
@@ -230,9 +226,15 @@ with tab_consola:
                                 "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
                                 (nuevo_user, nuevo_hash, nuevo_rol)
                             )
-                            # Registrar de inmediato en la tabla de auditoría la creación del usuario
                             cursor.execute(
                                 "INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);",
                                 ("Sistema Sandbox", f"Se dio de alta un nuevo operador: {nuevo_user} con rol: {nuevo_rol}.")
                             )
                             conn.commit()
+                            cursor.close()
+                            conn.close()
+                            st.success(f"Usuario {nuevo_user} registrado con éxito.")
+                        except Exception as err:
+                            st.error(f"Error db: {err}")
+                else:
+                    st.error("Datos inválidos.")
