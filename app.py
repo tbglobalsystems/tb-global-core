@@ -208,6 +208,6 @@ if st.session_state["auth_rol"] is None:
         ctx.restore();
 
         ctx.restore(); requestAnimationFrame(renderSistema);
-    """
+    
     st.components.v1.html(html_mundo_3d, height=410)
 
