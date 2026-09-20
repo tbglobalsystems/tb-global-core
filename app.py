@@ -49,7 +49,7 @@ st.markdown("""
     .card-ingenieria { background: linear-gradient(135deg, #1e293b 0%, #030407 100%); padding: 24px; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 20px; }
     .policy-box { background-color: #0f172a; padding: 20px; border-radius: 6px; border: 1px solid #334155; height: 220px; overflow-y: scroll; margin-bottom: 15px; font-size: 13px; color: #94a3b8; line-height: 1.6; }
     </style>
-""", unsafe_html=True)
+""", unsafe_allow_html=True)
 
 # ─── CARGA SEGURA DE VARIABLES OCULTAS EN LA NUBE ───
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
