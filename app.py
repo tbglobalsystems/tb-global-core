@@ -52,7 +52,7 @@ st.markdown("""
 """, unsafe_html=True)
 
 # ─── CARGA SEGURA DE VARIABLES OCULTAS EN LA NUBE ───
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY",""
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_PRICE_MENSUAL = os.getenv("STRIPE_PRICE_MENSUAL_ID",""
 STRIPE_PRICE_ANUAL = os.getenv("STRIPE_PRICE_ANUAL_ID",""
 
