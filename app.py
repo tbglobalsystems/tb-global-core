@@ -131,9 +131,4 @@ def sanitizar_entrada(texto):
 if "auth_rol" not in st.session_state: st.session_state["auth_rol"] = None
 if "user_token" not in st.session_state: st.session_state["user_token"] = None
 if "raw_pin" not in st.session_state: st.session_state["raw_pin"] = None
-if "abrir_chat_soporte" not in st.session_state: st.session_state["abrir_chat_soporte"] = 
-
-        ctx.restore(); requestAnimationFrame(renderSistema);
-    """
-    st.components.v1.html(html_mundo_3d, height=410)
-
+if "abrir_chat_soporte" not in st.session_state: st.session_state["
