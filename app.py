@@ -3,9 +3,8 @@ import os
 import psycopg2
 import hashlib
 import pandas as pd
-import time
 
-# 1. CONFIGURACIÓN DE LA PÁGINA
+# 1. CONFIGURACIÓN
 st.set_page_config(
     page_title="T&B Global - Enterprise OS",
     page_icon="⚡",
@@ -13,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos visuales premium (Logo en Azul Corporativo / Subtítulo en Blanco)
+# Estilos visuales premium (Logo en Azul / Subtítulo en Blanco)
 st.markdown("""
 <style>
     .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
@@ -25,11 +24,6 @@ st.markdown("""
     }
     .logo-text { font-size: 38px; font-weight: 800; color: #0284c7; letter-spacing: 1px; margin: 0; }
     .logo-sub { font-size: 14px; color: #ffffff; font-weight: 600; letter-spacing: 4px; margin: 5px 0 0 0; }
-    .card-modulo {
-        background: #0f172a; padding: 20px; border-radius: 8px;
-        border: 1px solid #1e293b; border-left: 4px solid #0284c7; margin-bottom: 15px;
-    }
-    .status-success { color: #10b981; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -38,7 +32,7 @@ if "auth_rol" not in st.session_state:
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
-# 2. CONEXIÓN A LA BASE DE DATOS (EXCLUSIVA POSTGRESQL)
+# 2. BASE DE DATOS
 def inicializar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
     if not url_db:
@@ -80,33 +74,27 @@ st.markdown("""
 
 tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de Comando"])
 
-# PESTAÑA 1: PORTAL DE RED GLOBAL
+# PESTAÑA 1
 with tab_portal:
-    st.markdown("### 🌐 Monitoreo de Nodos en Tiempo Real")
-    if os.path.exists("mundo.html"):
-        with open("mundo.html", "r", encoding="utf-8") as f:
-            html_mapa = f.read()
-        st.components.v1.html(html_mapa, height=500, scroller=False)
-    else:
-        coordenadas_datos = {
-            'lat': [40.7128, 34.0522, 51.5074, 35.6762, -22.9068, -33.8688, 19.4326, 48.8566],
-            'lon': [-74.0060, -118.2437, -0.1278, 139.6503, -43.1729, 151.2093, -99.1332, 2.3522]
-        }
-        st.map(pd.DataFrame(coordenadas_datos), zoom=1, use_container_width=True)
+    st.markdown("### 🌐 Monitoreo de Nodos")
+    coordenadas_datos = {
+        'lat': [40.7128, 34.0522, 51.5074, 35.6762],
+        'lon': [-74.0060, -118.2437, -0.1278, 139.6503]
+    }
+    st.map(pd.DataFrame(coordenadas_datos), zoom=1, use_container_width=True)
 
-# PESTAÑA 2: ACCESO CENTRALIZADO
+# PESTAÑA 2
 with tab_acceso:
-    st.markdown("### 🔐 Autenticación de Operadores")
+    st.markdown("### 🔐 Autenticación")
     if st.session_state["auth_rol"] is None:
         with st.form("formulario_acceso"):
-            input_usuario = st.text_input("ID de Usuario Corporativo:")
-            input_pin = st.text_input("PIN de Seguridad (4 dígitos):", type="password", max_chars=4)
+            input_usuario = st.text_input("ID de Usuario:")
+            input_pin = st.text_input("PIN (4 dígitos):", type="password", max_chars=4)
             boton_login = st.form_submit_button("Validar Credenciales")
             
             if boton_login:
                 hash_verificar = hashlib.sha256(input_pin.encode()).hexdigest()
                 url_db = os.environ.get("DATABASE_URL")
-                
                 if url_db:
                     try:
                         conn = psycopg2.connect(url_db)
@@ -115,7 +103,6 @@ with tab_acceso:
                         resultado = cursor.fetchone()
                         cursor.close()
                         conn.close()
-                        
                         if resultado:
                             st.session_state["auth_rol"] = resultado[0]
                             st.session_state["usuario_activo"] = input_usuario
@@ -124,76 +111,39 @@ with tab_acceso:
                         else:
                             st.error("PIN o usuario incorrectos.")
                     except Exception as err:
-                        st.error(f"Fallo de autenticación: {err}")
-                else:
-                    st.error("DATABASE_URL no configurada en el entorno.")
+                        st.error(f"Error: {err}")
     else:
-        st.info(f"Sesión activa: **{st.session_state['usuario_activo']}**")
+        st.info(f"Sesión activa: {st.session_state['usuario_activo']}")
         if st.button("Cerrar Sesión"):
             st.session_state["auth_rol"] = None
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO
+# PESTAÑA 3
 with tab_consola:
-    st.markdown("### 📊 Consola de Comando de Infraestructura")
-    
+    st.markdown("### 📊 Consola de Comando")
     if st.session_state["auth_rol"] is not None:
-        st.success(f"Nivel de Autorización Verificado: {st.session_state['auth_rol']}")
-        st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
-        
-        if st.button("🚀 Lanzar Crew: Auditoría de Nodos Globales"):
-            with st.spinner("Inicializando agentes de CrewAI..."):
-                try:
-                    from crewai import Agent, Task, Crew
-                    
-                    auditor = Agent(
-                        role='Auditor de Sistemas Cloud',
-                        goal='Analizar anomalías en la telemetría de la infraestructura',
-                        backstory='Experto en ciberseguridad industrial.',
-                        verbose=True,
-                        allow_delegation=False
-                    )
-                    
-                    tarea_auditoria = Task(
-                        description='Revisar el estado reportado e identificar puntos críticos en los servidores.',
-                        expected_output='Un breve resumen ejecutivo con 3 recomendaciones de seguridad.',
-                        agent=auditor
-                    )
-                    
-                    crew = Crew(agents=[auditor], tasks=[tarea_auditoria], verbose=True)
-                    resultado_crew = crew.kickoff()
-                    
-                    st.success("✨ ¡Misión de CrewAI Completada!")
-                    st.markdown(f"**Resultado del Análisis:**\n\n{resultado_crew}")
-                    
-                except Exception as e:
-                    st.error(f"Error al ejecutar CrewAI: {e}")
-        
-        st.write("---")
-        st.write("### Telemetría de Sistemas en Tiempo Real")
+        st.success(f"Autorización: {st.session_state['auth_rol']}")
+        st.write("Telemetría en Tiempo Real")
         datos_operaciones = pd.DataFrame({
-            "Módulo": ["Criptografía Core", "Base Datos Postgres", "CrewAI Engine", "Stripe Gateway"],
-            "Estado": ["Operando", "Conectado", "Durmiente (Listo)", "Sandbox Activo"],
-            "Carga de Trabajo": ["2%", "8%", "0%", "0%"]
+            "Módulo": ["Criptografía Core", "Base Datos Postgres"],
+            "Estado": ["Operando", "Conectado"]
         })
         st.table(datos_operaciones)
         
     if st.session_state["auth_rol"] is None:
-        st.warning("⚠️ Modo Sandbox Activo: Inicie sesión o use el panel de abajo para dar de alta credenciales.")
-        st.write("---")
-        st.markdown("### 🛰️ Registro de Nuevos Operadores")
+        st.warning("⚠️ Modo Sandbox Activo")
+        st.markdown("### 🛰️ Registro de Operadores")
         with st.form("crear_usuario_nuevo"):
             nuevo_user = st.text_input("ID de Usuario Nuevo:")
-            nuevo_pin = st.text_input("PIN de Seguridad Nuevo (4 dígitos):", type="password", max_chars=4)
-            nuevo_rol = st.selectbox("Asignar Rol:", ["Administrador Industrial", "Operador de Telecomunicaciones", "Auditor de Seguridad"])
+            nuevo_pin = st.text_input("PIN Nuevo (4 dígitos):", type="password", max_chars=4)
+            nuevo_rol = st.selectbox("Rol:", ["Administrador", "Operador", "Auditor"])
             boton_crear = st.form_submit_button("Registrar Credenciales")
             
             if boton_crear:
                 if len(nuevo_pin) == 4 and nuevo_user != "":
                     nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
                     url_db = os.environ.get("DATABASE_URL")
-                    
                     if url_db:
                         try:
                             conn = psycopg2.connect(url_db)
@@ -205,10 +155,8 @@ with tab_consola:
                             conn.commit()
                             cursor.close()
                             conn.close()
-                            st.success(f"Usuario '{nuevo_user}' registrado con éxito.")
+                            st.success(f"Usuario {nuevo_user} registrado.")
                         except Exception as err:
-                            st.error(f"Error al registrar usuario: {err}")
-                    else:
-                        st.error("DATABASE_URL no disponible.")
+                            st.error(f"Error db: {err}")
                 else:
-                    st.error("Por favor, ingrese un nombre válido y un PIN
+                    st.error("Datos invalidos.")
