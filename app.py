@@ -1,6 +1,5 @@
 import streamlit as st
 import os
-import sqlite3
 import psycopg2
 import hashlib
 import pandas as pd
@@ -39,45 +38,28 @@ if "auth_rol" not in st.session_state:
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
-# 2. CONEXIÓN A LA BASE DE DATOS
+# 2. CONEXIÓN A LA BASE DE DATOS (EXCLUSIVA POSTGRESQL)
 def inicializar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
-    if url_db:
-        try:
-            conn = psycopg2.connect(url_db)
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios_sistema (
-                    id SERIAL PRIMARY KEY,
-                    usuario VARCHAR(50) UNIQUE NOT NULL,
-                    pin_hash VARCHAR(64) NOT NULL,
-                    rol VARCHAR(30) NOT NULL
-                );
-            """)
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return "PostgreSQL Conectado"
-        except Exception as e:
-            return f"Error Postgres: {e}"
-    else:
-        try:
-            conn = sqlite3.connect("local_sandbox.db")
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios_sistema (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    usuario TEXT UNIQUE NOT NULL,
-                    pin_hash TEXT NOT NULL,
-                    rol TEXT NOT NULL
-                );
-            """)
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return "Modo Local (SQLite)"
-        except Exception as e:
-            return f"Error Local: {e}"
+    if not url_db:
+        return "Falta variable DATABASE_URL"
+    try:
+        conn = psycopg2.connect(url_db)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios_sistema (
+                id SERIAL PRIMARY KEY,
+                usuario VARCHAR(50) UNIQUE NOT NULL,
+                pin_hash VARCHAR(64) NOT NULL,
+                rol VARCHAR(30) NOT NULL
+            );
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return "PostgreSQL Conectado"
+    except Exception as e:
+        return f"Error Postgres: {e}"
 
 estado_infraestructura = inicializar_base_datos()
 
@@ -124,33 +106,27 @@ with tab_acceso:
             if boton_login:
                 hash_verificar = hashlib.sha256(input_pin.encode()).hexdigest()
                 url_db = os.environ.get("DATABASE_URL")
-                resultado = None
                 
-                try:
-                    if url_db:
+                if url_db:
+                    try:
                         conn = psycopg2.connect(url_db)
                         cursor = conn.cursor()
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
                         resultado = cursor.fetchone()
                         cursor.close()
                         conn.close()
-                    else:
-                        conn = sqlite3.connect("local_sandbox.db")
-                        cursor = conn.cursor()
-                        cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=? AND pin_hash=?;", (input_usuario, hash_verificar))
-                        resultado = cursor.fetchone()
-                        cursor.close()
-                        conn.close()
-                    
-                    if resultado:
-                        st.session_state["auth_rol"] = resultado
-                        st.session_state["usuario_activo"] = input_usuario
-                        st.success("Acceso Concedido")
-                        st.rerun()
-                    else:
-                        st.error("PIN o usuario incorrectos.")
-                except Exception as err:
-                    st.error(f"Fallo de autenticación: {err}")
+                        
+                        if resultado:
+                            st.session_state["auth_rol"] = resultado[0]
+                            st.session_state["usuario_activo"] = input_usuario
+                            st.success("Acceso Concedido")
+                            st.rerun()
+                        else:
+                            st.error("PIN o usuario incorrectos.")
+                    except Exception as err:
+                        st.error(f"Fallo de autenticación: {err}")
+                else:
+                    st.error("DATABASE_URL no configurada en el entorno.")
     else:
         st.info(f"Sesión activa: **{st.session_state['usuario_activo']}**")
         if st.button("Cerrar Sesión"):
@@ -217,8 +193,9 @@ with tab_consola:
                 if len(nuevo_pin) == 4 and nuevo_user != "":
                     nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
                     url_db = os.environ.get("DATABASE_URL")
-                    try:
-                        if url_db:
+                    
+                    if url_db:
+                        try:
                             conn = psycopg2.connect(url_db)
                             cursor = conn.cursor()
                             cursor.execute(
@@ -228,3 +205,10 @@ with tab_consola:
                             conn.commit()
                             cursor.close()
                             conn.close()
+                            st.success(f"Usuario '{nuevo_user}' registrado con éxito.")
+                        except Exception as err:
+                            st.error(f"Error al registrar usuario: {err}")
+                    else:
+                        st.error("DATABASE_URL no disponible.")
+                else:
+                    st.error("Por favor, ingrese un nombre válido y un PIN
