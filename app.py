@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos visuales premium corregidos (Texto grande: Azul / Subtítulo: Blanco)
+# Estilos visuales premium (Texto grande: Azul / Subtítulo: Blanco)
 st.markdown("""
 <style>
     .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
@@ -122,6 +122,7 @@ with tab_acceso:
             if boton_login:
                 hash_verificar = hashlib.sha256(input_pin.encode()).hexdigest()
                 url_db = os.environ.get("DATABASE_URL")
+                resultado = None
                 
                 try:
                     if url_db:
@@ -129,11 +130,15 @@ with tab_acceso:
                         cursor = conn.cursor()
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
                         resultado = cursor.fetchone()
+                        cursor.close()
+                        conn.close()
                     else:
                         conn = sqlite3.connect("local_sandbox.db")
                         cursor = conn.cursor()
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=? AND pin_hash=?;", (input_usuario, hash_verificar))
                         resultado = cursor.fetchone()
+                        cursor.close()
+                        conn.close()
                     
                     if resultado:
                         st.session_state["auth_rol"] = resultado[0]
@@ -142,13 +147,6 @@ with tab_acceso:
                         st.rerun()
                     else:
                         st.error("PIN o usuario incorrectos.")
-                    
-                    if url_db:
-                        cursor.close()
-                        conn.close()
-                    else:
-                        cursor.close()
-                        conn.close()
                 except Exception as err:
                     st.error(f"Fallo de autenticación: {err}")
     else:
@@ -167,14 +165,14 @@ with tab_consola:
         st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
         
         if st.button("🚀 Lanzar Crew: Auditoría de Nodos Globales"):
-            with st.spinner("Inicializando agentes de CrewAI y cargando modelos..."):
+            with st.spinner("Inicializando agentes de CrewAI..."):
                 try:
                     from crewai import Agent, Task, Crew
                     
                     auditor = Agent(
                         role='Auditor de Sistemas Cloud',
                         goal='Analizar anomalías en la telemetría de la infraestructura',
-                        backstory='Experto en ciberseguridad industrial y bases de datos relacionales.',
+                        backstory='Experto en ciberseguridad industrial.',
                         verbose=True,
                         allow_delegation=False
                     )
@@ -193,7 +191,6 @@ with tab_consola:
                     
                 except Exception as e:
                     st.error(f"Error al ejecutar CrewAI: {e}")
-                    st.info("Nota: Recuerde configurar su OPENAI_API_KEY en el panel de variables de Railway.")
         
         st.write("---")
         st.write("### Telemetría de Sistemas en Tiempo Real")
@@ -224,3 +221,9 @@ with tab_consola:
                             cursor = conn.cursor()
                             cursor.execute(
                                 "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
+                                (nuevo_user, nuevo_hash, nuevo_rol)
+                            )
+                            conn.commit()
+                            cursor.close()
+                            conn.close()
+                        else:
