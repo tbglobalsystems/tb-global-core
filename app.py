@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos visuales premium (Texto grande: Azul / Subtítulo: Blanco)
+# Estilos visuales premium (Logo en Azul Corporativo / Subtítulo en Blanco)
 st.markdown("""
 <style>
     .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
@@ -34,8 +34,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if "auth_rol" not in st.session_state: st.session_state["auth_rol"] = None
-if "usuario_activo" not in st.session_state: st.session_state["usuario_activo"] = None
+if "auth_rol" not in st.session_state:
+    st.session_state["auth_rol"] = None
+if "usuario_activo" not in st.session_state:
+    st.session_state["usuario_activo"] = None
 
 # 2. CONEXIÓN A LA BASE DE DATOS
 def inicializar_base_datos():
@@ -201,7 +203,7 @@ with tab_consola:
         })
         st.table(datos_operaciones)
         
-    else:
+    if st.session_state["auth_rol"] is None:
         st.warning("⚠️ Modo Sandbox Activo: Inicie sesión o use el panel de abajo para dar de alta credenciales.")
         st.write("---")
         st.markdown("### 🛰️ Registro de Nuevos Operadores")
@@ -226,4 +228,3 @@ with tab_consola:
                             conn.commit()
                             cursor.close()
                             conn.close()
-                        else:
