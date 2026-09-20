@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. INYECCIÓN DE ESTILOS GLOBALES COMPATIBLES (Fijados con markdown seguro)
+# 2. INYECCIÓN DE ESTILOS GLOBALES COMPATIBLES
 st.markdown("""
 <style>
     .brand-container {
@@ -197,7 +197,7 @@ with tab_portal:
 # PESTAÑA 2: ACCESO CENTRALIZADO
 with tab_acceso:
     st.markdown("### 🔐 Autenticación de Operadores")
-    if st.session_state["auth_rol"] is None:
+    if st.session_state["usuario_activo"] is None:
         with st.form("formulario_acceso"):
             input_usuario = st.text_input("ID de Usuario:")
             input_pin = st.text_input("PIN (4 dígitos):", type="password", max_chars=4)
@@ -247,7 +247,7 @@ with tab_acceso:
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
-    if st.session_state["auth_rol"] is not None:
+    # ACCESO SEGURO BASADO ÚNICAMENTE EN LA EXISTENCIA DE LA SESIÓN ACTIVA (INMUNE A TUPLAS)
+    if st.session_state["usuario_activo"] is not None:
         st.success(f"Nivel de Autorización Verificado: {st.session_state['auth_rol']}")
         
-        # 1. ORQUESTACIÓN CREWAI
