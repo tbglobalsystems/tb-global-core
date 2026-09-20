@@ -91,7 +91,7 @@ def inicializar_base_datos():
 
 estado_infraestructura = inicializar_base_datos()
 
-# 3. FUNCIÓN DE BACKEND PARA EJECUTAR CREWAI
+# 3. FUNCIÓN DE BACKEND PARA EJECUTAR CREWAI (SEGURO PARA HILOS)
 def ejecutar_flujo_crew(usuario):
     try:
         api_key = os.environ.get("OPENAI_API_KEY")
