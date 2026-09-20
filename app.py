@@ -194,4 +194,5 @@ with tab_consola:
         })
         st.table(datos_operaciones)
     else:
-        st.warning("⚠️ Acceso Restringido. Inicie sesión primero en la pestaña
+        
+st.warning("⚠️ Acceso Restringido. Inicie sesión primero en la pestaña
