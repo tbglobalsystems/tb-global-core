@@ -208,8 +208,5 @@ if st.session_state["auth_rol"] is None:
         ctx.restore();
 
         ctx.restore(); requestAnimationFrame(renderSistema);
-    }
-    renderSistema();
-</script>
-</div>
-""" 
+    
+
