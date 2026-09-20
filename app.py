@@ -211,5 +211,9 @@ elif opcion_menu == "📊 Consola de Comando":
         """, unsafe_allow_html=True)
         
         # Muestra una tabla simulando datos corporativos
-        st.write("### Registros de Telecomunicaciones en Tiempo Real")
-      
+        st.write("### Registros de Telecomunicaciones en Tiempo datos_operaciones = pd.DataFrame({
+            "Módulo": ["Criptografía", "Base Datos Postgres", "CrewAI Agents", "Stripe Gateway (Sandbox)"],
+            "Estado": ["Operando (Fernet Activo)", "Conectado (Cloud)", "Durmiente (Esperando Tareas)", "Modo Pruebas Listo"],
+            "Carga": ["4%", "12%", "0%", "Listo"]
+        })
+        st.table(datos_operaciones)
