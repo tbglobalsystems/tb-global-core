@@ -91,10 +91,14 @@ def inicializar_base_datos():
 
 estado_infraestructura = inicializar_base_datos()
 
-# 3. FUNCIÓN DE BACKEND PARA EJECUTAR CREWAI (SEGURO PARA HILOS)
-def ejecutar_flujo_crew(usuario, api_key):
+# 3. FUNCIÓN DE BACKEND PARA EJECUTAR CREWAI
+def ejecutar_flujo_crew(usuario):
     try:
-        os.environ["OPENAI_API_KEY"] = api_key
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            st.session_state["crew_resultado"] = "Error: El sistema no tiene la variable OPENAI_API_KEY configurada en Railway."
+            return
+            
         from crewai import Agent, Task, Crew
         
         analista = Agent(
@@ -179,7 +183,7 @@ with tab_acceso:
                         resultado = cursor.fetchone()
                         
                         if resultado:
-                            st.session_state["auth_rol"] = str(resultado[0])
+                            st.session_state["auth_rol"] = str(resultado)
                             st.session_state["usuario_activo"] = input_usuario
                             
                             cursor.execute(
@@ -218,7 +222,7 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO
+# PESTAÑA 3: CONSOLA DE COMANDO (AUTOMATIZADA)
 with tab_consola:
     st.markdown("### 📊 Consola de Comando")
     
@@ -226,26 +230,21 @@ with tab_consola:
         st.success(f"Autorización Operativa Nivel: {st.session_state['auth_rol']}")
         
         st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
-        st.write("Despliegue agentes cognitivos para auditar la telemetría global en segundo plano.")
-        
-        input_token_ai = st.text_input("Introduzca OpenAI API Key corporativa (sk-...):", type="password")
+        st.write("Despliegue agentes cognitivos utilizando las credenciales del sistema central.")
         
         if st.button("🚀 Lanzar Flujo de CrewAI Autónomo", disabled=st.session_state["crew_ejecutando"]):
-            if input_token_ai.startswith("sk-"):
-                st.session_state["crew_ejecutando"] = True
-                st.session_state["crew_resultado"] = None
-                
-                hilo_agente = threading.Thread(
-                    target=ejecutar_flujo_crew,
-                    args=(st.session_state["usuario_activo"], input_token_ai)
-                )
-                hilo_agente.start()
-                st.toast("Ecosistema de agentes CrewAI inicializado en segundo plano.", icon="🤖")
-            else:
-                st.error("Por favor, ingrese un token válido de OpenAI para aprovisionar los agentes.")
+            st.session_state["crew_ejecutando"] = True
+            st.session_state["crew_resultado"] = None
+            
+            hilo_agente = threading.Thread(
+                target=ejecutar_flujo_crew,
+                args=(st.session_state["usuario_activo"],)
+            )
+            hilo_agente.start()
+            st.toast("Ecosistema de agentes CrewAI inicializado utilizando tokens del sistema.", icon="🤖")
         
         if st.session_state["crew_ejecutando"]:
-            st.info("⌛ Los agentes de CrewAI se encuentran procesando la telemetría. Por favor espere...")
+            st.info("⌛ Los agentes de CrewAI se encuentran procesando la telemetría central. Por favor espere...")
         
         if st.session_state["crew_resultado"]:
             st.markdown("##### 📝 Reporte Generado por la IA:")
@@ -253,3 +252,7 @@ with tab_consola:
         
         st.write("---")
         # MÓDULO DE LOGS HISTÓRICOS
+        st.markdown("#### 📜 Registro General de Logs de Auditoría (PostgreSQL)")
+        url_db = os.environ.get("DATABASE_URL")
+        if url_db:
+            try:
