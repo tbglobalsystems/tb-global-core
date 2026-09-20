@@ -143,7 +143,7 @@ with tab_acceso:
                         conn.close()
                     
                     if resultado:
-                        st.session_state["auth_rol"] = resultado[0]
+                        st.session_state["auth_rol"] = resultado
                         st.session_state["usuario_activo"] = input_usuario
                         st.success("Acceso Concedido")
                         st.rerun()
