@@ -173,3 +173,12 @@ if st.session_state["auth_rol"] is None:
                 ctx.strokeStyle = 'rgba(2, 132, 199, 0.15)'; ctx.lineWidth = 1;
                 for (let j = 1; j < 6; j++) { ctx.beginPath(); ctx.ellipse(centroX, centroY, radio, j * 25, 0, 0, Math.PI * 2); ctx.stroke(); }
                 ctx.restore();
+                let satX = (radio + 35) * Math.cos(orbitaSatelite); let satY = 30 * Math.sin(orbitaSatelite);
+        ctx.fillStyle = '#f8fafc'; ctx.fillRect(satX - 4, satY - 4, 8, 8); ctx.fillStyle = '#38bdf8'; ctx.fillRect(satX - 12, satY - 1, 7, 2); ctx.fillRect(satX + 5, satY - 1, 7, 2);
+        ctx.restore(); requestAnimationFrame(dibujarGlobo);
+    }
+    dibujarGlobo();
+</script>
+</div>
+"""
+st.components.v1.html(html_mundo_3d, height=420)
