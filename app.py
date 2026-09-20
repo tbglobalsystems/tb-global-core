@@ -139,7 +139,7 @@ if "abrir_chat_soporte" not in st.session_state: st.markdown("""
 """, unsafe_allow_html=True)
 
 col_izq, col_centro, col_der = st.columns([0.5, 2, 0.5])
- html_mundo_3d = """
+html_mundo_3d = """
     <div style="display: flex; justify-content: center; align-items: center; background: #030407; width: 100%; border-radius: 12px; overflow: hidden; padding: 10px 0;">
     <canvas id="canvasTelecom" width="380" height="380" style="background: transparent;"></canvas>
     <script>
