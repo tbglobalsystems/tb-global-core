@@ -146,7 +146,7 @@ if st.session_state["auth_rol"] is None:
     
     col_izq, col_centro, col_der = st.columns([1, 1.2, 1])
     with col_centro:
-       flex; justify-content: center; align-items: center; background: #030407; padding: 15px; border-radius: 12px;">
+       
 <canvas id="canvasTelecom" width="380" height="380" style="background: transparent;"></canvas>
 <script>
     const canvas = document.getElementById('canvasTelecom'); const ctx = canvas.getContext('2d');
