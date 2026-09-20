@@ -1,4 +1,4 @@
-pythonimport streamlit as st
+pytlnimport streamlit as st
 import os
 import time
 import secrets
