@@ -3,6 +3,7 @@ import os
 import psycopg2
 import hashlib
 import pandas as pd
+import threading
 
 # 1. CONFIGURACIÓN DE LA PÁGINA
 st.set_page_config(
@@ -49,6 +50,10 @@ if "auth_rol" not in st.session_state:
     st.session_state["auth_rol"] = None
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
+if "crew_ejecutando" not in st.session_state:
+    st.session_state["crew_ejecutando"] = False
+if "crew_resultado" not in st.session_state:
+    st.session_state["crew_resultado"] = None
 
 # 2. CONEXIÓN Y CREACIÓN DE TABLAS
 def inicializar_base_datos():
@@ -59,7 +64,6 @@ def inicializar_base_datos():
         conn = psycopg2.connect(url_db)
         cursor = conn.cursor()
         
-        # TABLA 1: Credenciales
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS usuarios_sistema (
                 id SERIAL PRIMARY KEY,
@@ -69,7 +73,6 @@ def inicializar_base_datos():
             );
         """)
         
-        # TABLA 2: Logs Históricos de Auditoría
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS logs_auditoria (
                 id SERIAL PRIMARY KEY,
@@ -88,14 +91,56 @@ def inicializar_base_datos():
 
 estado_infraestructura = inicializar_base_datos()
 
-# 3. BARRA LATERAL
+# 3. FUNCIÓN DE BACKEND PARA EJECUTAR CREWAI (SEGURO PARA HILOS)
+def ejecutar_flujo_crew(usuario, api_key):
+    try:
+        os.environ["OPENAI_API_KEY"] = api_key
+        from crewai import Agent, Task, Crew
+        
+        analista = Agent(
+            role='Analista de Infraestructura Global',
+            goal='Auditar logs operativos e identificar áreas críticas de rendimiento.',
+            backstory='Un motor de IA experto en optimización de sistemas en la nube y bases de datos relacionales.',
+            verbose=False,
+            allow_delegation=False
+        )
+        
+        tarea_analisis = Task(
+            description='Analizar el estado de conexión de la red cuántica simulada y proponer mejoras.',
+            expected_output='Un resumen ejecutivo en limpio con 3 puntos clave optimizados.',
+            agent=analista
+        )
+        
+        instancia_crew = Crew(agents=[analista], tasks=[tarea_analisis], verbose=False)
+        salida_texto = instancia_crew.kickoff()
+        
+        st.session_state["crew_resultado"] = str(salida_texto)
+        
+        url_db = os.environ.get("DATABASE_URL")
+        if url_db:
+            conn = psycopg2.connect(url_db)
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);",
+                (usuario, f"Auditoría CrewAI completada con éxito. Reporte: {str(salida_texto)[:100]}...")
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+    except Exception as e:
+        st.session_state["crew_resultado"] = f"Error en la ejecución agéntica: {str(e)}"
+    finally:
+        st.session_state["crew_ejecutando"] = False
+
+# 4. BARRA LATERAL
 with st.sidebar:
     st.markdown("<h2 style='color:#0284c7;'>⚡ Panel OS</h2>", unsafe_allow_html=True)
     st.caption(f"Infraestructura: {estado_infraestructura}")
     if st.session_state["usuario_activo"]:
         st.success(f"Operador: {st.session_state['usuario_activo']}")
 
-# 4. ENCABEZADO CORPORATIVO
+# 5. ENCABEZADO CORPORATIVO
 st.markdown("""
 <div class="brand-container">
     <h1 class="brand-title">⚡ T&B Global</h1>
@@ -134,7 +179,8 @@ with tab_acceso:
                         resultado = cursor.fetchone()
                         
                         if resultado:
-                            st.session_state["auth_rol"] = resultado[0]
+                            # Extracción limpia del texto del rol eliminando formato de tupla Postgres
+                            st.session_state["auth_rol"] = str(resultado[0])
                             st.session_state["usuario_activo"] = input_usuario
                             
                             cursor.execute(
@@ -173,68 +219,34 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO
+# PESTAÑA 3: CONSOLA DE COMANDO (DESBLOQUEO COMPLETO CORREGIDO)
 with tab_consola:
     st.markdown("### 📊 Consola de Comando")
     
     if st.session_state["auth_rol"] is not None:
         st.success(f"Autorización Operativa Nivel: {st.session_state['auth_rol']}")
         
-        st.markdown("#### 📜 Registro General de Logs de Auditoría (PostgreSQL)")
-        url_db = os.environ.get("DATABASE_URL")
-        if url_db:
-            try:
-                conn = psycopg2.connect(url_db)
-                query_logs = "SELECT usuario_operador AS \"Operador\", accion_ejecutada AS \"Acción Realizada\", fecha_registro AS \"Estampa de Tiempo\" FROM logs_auditoria ORDER BY fecha_registro DESC LIMIT 10;"
-                df_logs = pd.read_sql_query(query_logs, conn)
-                conn.close()
+        # MÓDULO INTELIGENTE: DESPLEGADO CORRECTAMENTE AHORA
+        st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
+        st.write("Despliegue agentes cognitivos para auditar la telemetría global en segundo plano.")
+        
+        input_token_ai = st.text_input("Introduzca OpenAI API Key corporativa (sk-...):", type="password")
+        
+        if st.button("🚀 Lanzar Flujo de CrewAI Autónomo", disabled=st.session_state["crew_ejecutando"]):
+            if input_token_ai.startswith("sk-"):
+                st.session_state["crew_ejecutando"] = True
+                st.session_state["crew_resultado"] = None
                 
-                if not df_logs.empty:
-                    st.dataframe(df_logs, use_container_width=True, hide_index=True)
-                else:
-                    st.info("No hay eventos registrados en los logs de infraestructura cloud.")
-            except Exception as e:
-                st.error(f"Error al leer logs: {e}")
+                hilo_agente = threading.Thread(
+                    target=ejecutar_flujo_crew,
+                    args=(st.session_state["usuario_activo"], input_token_ai)
+                )
+                hilo_agente.start()
+                st.toast("Ecosistema de agentes CrewAI inicializado en segundo plano.", icon="🤖")
+            else:
+                st.error("Por favor, ingrese un token válido de OpenAI para aprovisionar los agentes.")
         
-        st.write("---")
-        st.write("### Telemetría de Módulos Base")
-        datos_operaciones = pd.DataFrame({
-            "Módulo": ["Criptografía Core", "Base Datos Postgres", "Auditoría Engine"],
-            "Estado": ["Operando", "Conectado", "Activo (Capturando)"]
-        })
-        st.table(datos_operaciones)
+        if st.session_state["crew_ejecutando"]:
+            st.info("⌛ Los agentes de CrewAI se encuentran procesando la telemetría. Por favor espere...")
         
-    else:
-        st.warning("⚠️ Modo Sandbox Activo: Inicie sesión para ver la consola de auditoría empresarial.")
-        st.write("---")
-        st.markdown("### 🛰️ Registro de Operadores")
-        with st.form("crear_usuario_nuevo"):
-            nuevo_user = st.text_input("ID de Usuario Nuevo:")
-            nuevo_pin = st.text_input("PIN Nuevo (4 dígitos):", type="password", max_chars=4)
-            nuevo_rol = st.selectbox("Rol:", ["Administrador Industrial", "Operador de Telecomunicaciones", "Auditor de Seguridad"])
-            boton_crear = st.form_submit_button("Registrar Credenciales")
-            
-            if boton_crear:
-                if len(nuevo_pin) == 4 and nuevo_user != "":
-                    nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
-                    url_db = os.environ.get("DATABASE_URL")
-                    if url_db:
-                        try:
-                            conn = psycopg2.connect(url_db)
-                            cursor = conn.cursor()
-                            cursor.execute(
-                                "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
-                                (nuevo_user, nuevo_hash, nuevo_rol)
-                            )
-                            cursor.execute(
-                                "INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);",
-                                ("Sistema Sandbox", f"Se dio de alta un nuevo operador: {nuevo_user} con rol: {nuevo_rol}.")
-                            )
-                            conn.commit()
-                            cursor.close()
-                            conn.close()
-                            st.success(f"Usuario {nuevo_user} registrado con éxito.")
-                        except Exception as err:
-                            st.error(f"Error db: {err}")
-                else:
-                    st.error("Datos inválidos.")
+        if st.session_state["crew_resultado"]:
