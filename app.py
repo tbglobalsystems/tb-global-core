@@ -179,7 +179,6 @@ with tab_acceso:
                         resultado = cursor.fetchone()
                         
                         if resultado:
-                            # Extracción limpia del texto del rol eliminando formato de tupla Postgres
                             st.session_state["auth_rol"] = str(resultado[0])
                             st.session_state["usuario_activo"] = input_usuario
                             
@@ -219,14 +218,13 @@ with tab_acceso:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# PESTAÑA 3: CONSOLA DE COMANDO (DESBLOQUEO COMPLETO CORREGIDO)
+# PESTAÑA 3: CONSOLA DE COMANDO
 with tab_consola:
     st.markdown("### 📊 Consola de Comando")
     
     if st.session_state["auth_rol"] is not None:
         st.success(f"Autorización Operativa Nivel: {st.session_state['auth_rol']}")
         
-        # MÓDULO INTELIGENTE: DESPLEGADO CORRECTAMENTE AHORA
         st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
         st.write("Despliegue agentes cognitivos para auditar la telemetría global en segundo plano.")
         
@@ -250,3 +248,8 @@ with tab_consola:
             st.info("⌛ Los agentes de CrewAI se encuentran procesando la telemetría. Por favor espere...")
         
         if st.session_state["crew_resultado"]:
+            st.markdown("##### 📝 Reporte Generado por la IA:")
+            st.info(st.session_state["crew_resultado"])
+        
+        st.write("---")
+        # MÓDULO DE LOGS HISTÓRICOS
