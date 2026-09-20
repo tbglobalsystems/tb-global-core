@@ -15,7 +15,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos visuales premium del sistema corporativo
 st.markdown("""
 <style>
     .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
@@ -38,7 +37,7 @@ if "auth_rol" not in st.session_state: st.session_state["auth_rol"] = None
 if "usuario_activo" not in st.session_state: st.session_state["usuario_activo"] = None
 
 # =======================================================================
-# CONEXIÓN INTELIGENTE A LA BASE DE DATOS
+# CONEXIÓN A LA BASE DE DATOS
 # =======================================================================
 def inicializar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
@@ -78,7 +77,7 @@ def inicializar_base_datos():
 estado_infraestructura = inicializar_base_datos()
 
 # =======================================================================
-# BARRA LATERAL TELEMETRÍA (SIDEBAR)
+# BARRA LATERAL (SIDEBAR)
 # =======================================================================
 with st.sidebar:
     st.markdown("<h2 style='color:#0284c7;'>⚡ Panel OS</h2>", unsafe_allow_html=True)
@@ -87,7 +86,7 @@ with st.sidebar:
     st.write("Estado de Nodos Globales: **Óptimo**")
 
 # =======================================================================
-# ENCABEZADO PRINCIPAL DEL SISTEMA
+# ENCABEZADO PRINCIPAL
 # =======================================================================
 st.markdown("""
 <div class='logo-header'>
@@ -96,7 +95,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# NAVEGACIÓN MODERNA MEDIANTE PESTAÑAS
 tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de Comando"])
 
 # =======================================================================
@@ -128,8 +126,8 @@ with tab_acceso:
                 usuario_valido = False
                 rol_encontrado = None
                 
-                try:
-                    if url_db:
+                if url_db:
+                    try:
                         conn = psycopg2.connect(url_db)
                         cursor = conn.cursor()
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
@@ -139,7 +137,10 @@ with tab_acceso:
                             rol_encontrado = resultado[0]
                         cursor.close()
                         conn.close()
-                    else:
+                    except Exception as err:
+                        st.error(f"Error de conexión en nube: {err}")
+                else:
+                    try:
                         conn = sqlite3.connect("respaldo_local.db")
                         cursor = conn.cursor()
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=? AND pin_hash=?;", (input_usuario, hash_verificar))
@@ -148,26 +149,26 @@ with tab_acceso:
                             usuario_valido = True
                             rol_encontrado = resultado[0]
                         conn.close()
+                    except Exception as err:
+                        st.error(f"Error de conexión local: {err}")
                         
-                    if usuario_valido:
-                        st.session_state["auth_rol"] = rol_encontrado
-                        st.session_state["usuario_activo"] = input_usuario
-                        st.success(f"¡Acceso Concedido! Rol: {rol_encontrado}")
-                        st.rerun()
-                    else:
-                        st.error("ID de usuario o PIN incorrectos.")
-                except Exception as err:
-                    st.error(f"Fallo en el módulo de seguridad: {err}")
+                if usuario_valido:
+                    st.session_state["auth_rol"] = rol_encontrado
+                    st.session_state["usuario_activo"] = input_usuario
+                    st.success(f"¡Acceso Concedido! Rol: {rol_encontrado}")
+                    st.rerun()
+                else:
+                    st.error("ID de usuario o PIN incorrectos.")
     else:
         st.info(f"Sesión activa: **{st.session_state['usuario_activo']}**")
         st.write(f"Nivel de Autorización: `{st.session_state['auth_rol']}`")
-        if st.button("Cerrar Sesión Segura (Revocar Token)"):
+        if st.button("Cerrar Sesión Segura"):
             st.session_state["auth_rol"] = None
             st.session_state["usuario_activo"] = None
             st.rerun()
 
 # =======================================================================
-# PESTAÑA 3: CONSOLA DE COMANDO (MODO SANDBOX CON REGISTRO INTEGRADO)
+# PESTAÑA 3: CONSOLA DE COMANDO (REGISTRO INTEGRADO DE OPERADORES)
 # =======================================================================
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura")
@@ -194,8 +195,8 @@ with tab_consola:
                 if len(nuevo_pin) == 4 and nuevo_user != "":
                     nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
                     url_db = os.environ.get("DATABASE_URL")
-                    try:
-                        if url_db:
+                    if url_db:
+                        try:
                             conn = psycopg2.connect(url_db)
                             cursor = conn.cursor()
                             cursor.execute(
@@ -206,5 +207,6 @@ with tab_consola:
                             cursor.close()
                             conn.close()
                             st.success(f"¡Usuario '{nuevo_user}' registrado con éxito en Railway! Ya puede iniciar sesión.")
-                        else:
-                            st.error("No se detectó DATABASE_URL.")
+                        except Exception as ex:
+                            st.error(f"Error base de datos: {ex}")
+                    else:
