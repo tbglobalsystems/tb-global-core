@@ -212,4 +212,4 @@ elif opcion_menu == "📊 Consola de Comando":
         
         # Muestra una tabla simulando datos corporativos
         st.write("### Registros de Telecomunicaciones en Tiempo Real")
-        datos_operaciones = pd.DataFrame({
+      
