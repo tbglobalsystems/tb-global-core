@@ -5,9 +5,7 @@ import psycopg2
 import hashlib
 import pandas as pd
 
-# =======================================================================
-# CONFIGURACIÓN DE LA PÁGINA E INTERFAZ UI
-# =======================================================================
+# 1. CONFIGURACIÓN DE LA PÁGINA
 st.set_page_config(
     page_title="T&B Global - Enterprise OS",
     page_icon="⚡",
@@ -15,6 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Estilos visuales
 st.markdown("""
 <style>
     .main { background-color: #030407; color: #f1f5f9; font-family: 'Inter', sans-serif; }
@@ -26,19 +25,13 @@ st.markdown("""
     }
     .logo-text { font-size: 38px; font-weight: 800; color: #ffffff; letter-spacing: 1px; margin: 0; }
     .logo-sub { font-size: 14px; color: #0284c7; font-weight: 600; letter-spacing: 4px; margin: 5px 0 0 0; }
-    .card-modulo {
-        background: #0f172a; padding: 20px; border-radius: 8px;
-        border: 1px solid #1e293b; border-left: 4px solid #10b981; margin-bottom: 15px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
 if "auth_rol" not in st.session_state: st.session_state["auth_rol"] = None
 if "usuario_activo" not in st.session_state: st.session_state["usuario_activo"] = None
 
-# =======================================================================
-# CONEXIÓN A LA BASE DE DATOS
-# =======================================================================
+# 2. CONEXIÓN A LA BASE DE DATOS
 def inicializar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
     if url_db:
@@ -56,38 +49,19 @@ def inicializar_base_datos():
             conn.commit()
             cursor.close()
             conn.close()
-            return "PostgreSQL (Railway Cloud Active)"
+            return "PostgreSQL Conectado"
         except Exception as e:
             return f"Error Postgres: {e}"
-    else:
-        conn = sqlite3.connect("respaldo_local.db")
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS usuarios_sistema (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario TEXT UNIQUE NOT NULL,
-                pin_hash TEXT NOT NULL,
-                rol TEXT NOT NULL
-            );
-        """)
-        conn.commit()
-        conn.close()
-        return "SQLite3 (Modo Respaldo Local)"
+    return "Modo Local"
 
 estado_infraestructura = inicializar_base_datos()
 
-# =======================================================================
-# BARRA LATERAL (SIDEBAR)
-# =======================================================================
+# 3. BARRA LATERAL
 with st.sidebar:
     st.markdown("<h2 style='color:#0284c7;'>⚡ Panel OS</h2>", unsafe_allow_html=True)
     st.caption(f"Infraestructura: {estado_infraestructura}")
-    st.write("---")
-    st.write("Estado de Nodos Globales: **Óptimo**")
 
-# =======================================================================
-# ENCABEZADO PRINCIPAL
-# =======================================================================
+# 4. ENCABEZADO
 st.markdown("""
 <div class='logo-header'>
     <h1 class='logo-text'>⚡ T&B Global</h1>
@@ -97,35 +71,26 @@ st.markdown("""
 
 tab_portal, tab_acceso, tab_consola = st.tabs(["🌐 Portal de Red Global", "🔐 Acceso Centralizado", "📊 Consola de Comando"])
 
-# =======================================================================
 # PESTAÑA 1: PORTAL DE RED GLOBAL
-# =======================================================================
 with tab_portal:
     coordenadas_datos = {
         'lat': [40.7128, 34.0522, 51.5074, 35.6762, -22.9068, -33.8688, 19.4326, 48.8566],
-        'lon': [-74.0060, -118.2437, -0.1278, 139.6503, -43.1729, 151.2093, -99.1332, 2.3522],
-        'Tipo': ['Antena Alfa', 'Satélite Enlace', 'Base Cuántica', 'Estación Delta', 'Antena Omega', 'Satélite Beta', 'Estación Central', 'Enlace Central']
+        'lon': [-74.0060, -118.2437, -0.1278, 139.6503, -43.1729, 151.2093, -99.1332, 2.3522]
     }
-    df_mapa = pd.DataFrame(coordenadas_datos)
-    st.map(df_mapa, zoom=1, use_container_width=True)
+    st.map(pd.DataFrame(coordenadas_datos), zoom=1, use_container_width=True)
 
-# =======================================================================
 # PESTAÑA 2: ACCESO CENTRALIZADO
-# =======================================================================
 with tab_acceso:
     st.markdown("### 🔐 Autenticación de Operadores")
     if st.session_state["auth_rol"] is None:
         with st.form("formulario_acceso"):
-            input_usuario = st.text_input("ID de Usuario Corporativo:", placeholder="Ej: admin_tb")
+            input_usuario = st.text_input("ID de Usuario Corporativo:")
             input_pin = st.text_input("PIN de Seguridad (4 dígitos):", type="password", max_chars=4)
-            boton_login = st.form_submit_button("Validar Credenciales y Firmar Token")
+            boton_login = st.form_submit_button("Validar Credenciales")
             
             if boton_login:
                 hash_verificar = hashlib.sha256(input_pin.encode()).hexdigest()
                 url_db = os.environ.get("DATABASE_URL")
-                usuario_valido = False
-                rol_encontrado = None
-                
                 if url_db:
                     try:
                         conn = psycopg2.connect(url_db)
@@ -133,80 +98,49 @@ with tab_acceso:
                         cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (input_usuario, hash_verificar))
                         resultado = cursor.fetchone()
                         if resultado:
-                            usuario_valido = True
-                            rol_encontrado = resultado[0]
+                            st.session_state["auth_rol"] = resultado[0]
+                            st.session_state["usuario_activo"] = input_usuario
+                            st.success("Acceso Concedido")
+                            st.rerun()
+                        else:
+                            st.error("PIN o usuario incorrectos.")
                         cursor.close()
                         conn.close()
                     except Exception as err:
-                        st.error(f"Error de conexión en nube: {err}")
-                else:
-                    try:
-                        conn = sqlite3.connect("respaldo_local.db")
-                        cursor = conn.cursor()
-                        cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=? AND pin_hash=?;", (input_usuario, hash_verificar))
-                        resultado = cursor.fetchone()
-                        if resultado:
-                            usuario_valido = True
-                            rol_encontrado = resultado[0]
-                        conn.close()
-                    except Exception as err:
-                        st.error(f"Error de conexión local: {err}")
-                        
-                if usuario_valido:
-                    st.session_state["auth_rol"] = rol_encontrado
-                    st.session_state["usuario_activo"] = input_usuario
-                    st.success(f"¡Acceso Concedido! Rol: {rol_encontrado}")
-                    st.rerun()
-                else:
-                    st.error("ID de usuario o PIN incorrectos.")
+                        st.error(f"Fallo de conexión: {err}")
     else:
         st.info(f"Sesión activa: **{st.session_state['usuario_activo']}**")
-        st.write(f"Nivel de Autorización: `{st.session_state['auth_rol']}`")
-        if st.button("Cerrar Sesión Segura"):
+        if st.button("Cerrar Sesión"):
             st.session_state["auth_rol"] = None
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-# =======================================================================
-# PESTAÑA 3: CONSOLA DE COMANDO (REGISTRO INTEGRADO DE OPERADORES)
-# =======================================================================
+# PESTAÑA 3: CONSOLA DE COMANDO (REGISTRO DIRECTO SIN CONDICIONALES COMPLEJOS)
 with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura")
-    if st.session_state["auth_rol"] is not None:
-        st.success(f"Panel Desbloqueado para: {st.session_state['auth_rol']}")
-        st.write("### Registros de Telecomunicaciones en Tiempo Real")
-        datos_operaciones = pd.DataFrame({
-            "Módulo": ["Criptografía", "Base Datos Postgres", "CrewAI Agents", "Stripe Gateway (Sandbox)"],
-            "Estado": ["Operando (Fernet Activo)", "Conectado (Cloud)", "Durmiente", "Modo Pruebas Listo"],
-            "Carga": ["4%", "12%", "0%", "Listo"]
-        })
-        st.table(datos_operaciones)
-    else:
-        st.warning("⚠️ Modo Sandbox Activo: Cree credenciales en el panel de abajo.")
-        st.write("---")
-        st.markdown("### 🛰️ Registro de Nuevos Operadores")
-        with st.form("crear_usuario_nuevo"):
-            nuevo_user = st.text_input("Definir ID de Usuario Corporativo:", placeholder="Ej: admin_tb")
-            nuevo_pin = st.text_input("Definir PIN de Seguridad (4 dígitos):", type="password", max_chars=4)
-            nuevo_rol = st.selectbox("Asignar Rol del Sistema:", ["Administrador Industrial", "Operador de Telecomunicaciones", "Auditor de Seguridad"])
-            boton_crear = st.form_submit_button("Registrar Credenciales en PostgreSQL Cloud")
-            
-            if boton_crear:
-                if len(nuevo_pin) == 4 and nuevo_user != "":
-                    nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
-                    url_db = os.environ.get("DATABASE_URL")
-                    if url_db:
-                        try:
-                            conn = psycopg2.connect(url_db)
-                            cursor = conn.cursor()
-                            cursor.execute(
-                                "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
-                                (nuevo_user, nuevo_hash, nuevo_rol)
-                            )
-                            conn.commit()
-                            cursor.close()
-                            conn.close()
-                            st.success(f"¡Usuario '{nuevo_user}' registrado con éxito en Railway! Ya puede iniciar sesión.")
-                        except Exception as ex:
-                            st.error(f"Error base de datos: {ex}")
-                    else:
+    
+    st.markdown("### 🛰️ Registro Directo de Operadores en PostgreSQL Cloud")
+    with st.form("crear_usuario_nuevo"):
+        nuevo_user = st.text_input("ID de Usuario Nuevo:")
+        nuevo_pin = st.text_input("PIN de Seguridad Nuevo (4 dígitos):", type="password", max_chars=4)
+        nuevo_rol = st.selectbox("Asignar Rol:", ["Administrador Industrial", "Operador", "Auditor"])
+        boton_crear = st.form_submit_button("Registrar Credenciales")
+        
+        if boton_crear:
+            if len(nuevo_pin) == 4 and nuevo_user != "":
+                nuevo_hash = hashlib.sha256(nuevo_pin.encode()).hexdigest()
+                url_db = os.environ.get("DATABASE_URL")
+                if url_db:
+                    try:
+                        conn = psycopg2.connect(url_db)
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s) ON CONFLICT (usuario) DO NOTHING;",
+                            (nuevo_user, nuevo_hash, nuevo_rol)
+                        )
+                        conn.commit()
+                        cursor.close()
+                        conn.close()
+                        st.success(f"Usuario '{nuevo_user}' registrado con éxito en Railway. Ya puedes iniciar sesión.")
+                    except Exception as ex:
+                        st.error(f"Error base de datos: {ex}")
