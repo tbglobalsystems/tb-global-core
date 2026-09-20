@@ -106,7 +106,7 @@ if conn:
             );
         """)
         cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
-        if cursor.fetchone()[0] == 0:
+        if cursor.fetchone() == 0:
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
             cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
@@ -120,7 +120,7 @@ if conn:
 else:
     estado_infraestructura = "DATABASE_URL no configurada"
 
-# LÓGICA AGÉNTICA DE CREWAI PROTEGIDA CONTRA ERRORES DE IMPORTACIÓN
+# LÓGICA DE AGENTES CREWAI
 def ejecutar_flujo_crew(usuario):
     try:
         api_key = os.environ.get("OPENAI_API_KEY")
@@ -129,7 +129,6 @@ def ejecutar_flujo_crew(usuario):
             return
         os.environ["OPENAI_API_KEY"] = api_key
         
-        # Importación encapsulada interna para evitar congelar Streamlit
         from crewai import Agent, Task, Crew
         
         auditor = Agent(
@@ -156,7 +155,7 @@ def ejecutar_flujo_crew(usuario):
             cursor.close()
             db_conn.close()
     except Exception as e:
-        st.session_state["crew_resultado"] = f"Fallo operativo en CrewAI (Verificar Dependencias): {str(e)}"
+        st.session_state["crew_resultado"] = f"Fallo operativo en CrewAI: {str(e)}"
     finally:
         st.session_state["crew_ejecutando"] = False
 
@@ -250,3 +249,7 @@ with tab_consola:
     st.markdown("### 📊 Consola de Comando de Infraestructura Avanzada")
     
     if st.session_state["usuario_activo"] is not None:
+        st.success(f"Nivel de Autorización Verificado: Acceso Concedido")
+        
+        # 1. ORQUESTACIÓN CREWAI
+        st.markdown("#### 🤖 Orquestación de Agentes Inteligentes (CrewAI Core)")
