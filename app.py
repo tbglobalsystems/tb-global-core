@@ -209,7 +209,7 @@ elif opcion_menu == "📊 Consola de Comando":
             </p>
         </div>
         """, unsafe_allow_html=True)
-st.st.write("### Registros de Telecomunicaciones en Tiempo Real")
+     st.write("### Registros de Telecomunicaciones en Tiempo Real") 
         datos_operaciones = pd.DataFrame({
             "Módulo": ["Criptografía", "Base Datos Postgres", "CrewAI Agents", "Stripe Gateway (Sandbox)"],
             "Estado": ["Operando (Fernet Activo)", "Conectado (Cloud)", "Durmiente", "Modo Pruebas Listo"],
