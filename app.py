@@ -132,12 +132,10 @@ if "auth_rol" not in st.session_state: st.session_state["auth_rol"] = None
 if "user_token" not in st.session_state: st.session_state["user_token"] = None
 if "raw_pin" not in st.session_state: st.session_state["raw_pin"] = None
 
-<div class='logo-header' style='text-align: center; border-left: none; border-bottom: 4px solid #0284c7; padding: 15px;'>
-    <h1 class='logo-text' style='font-size: 42px;'>⚡ T&B Global</h1>
-    <p class='logo-sub' style='font-size: 16px; letter-spacing: 4px;'>QUANTUM ENTERPRISE OPERATING SYSTEM</p>
-</div>
-""", unsafe_allow_html=True)
-html_mundo_3d = """
+
+    
+    
+
 <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; background: #030407; width: 100%; border-radius: 12px; overflow: hidden; padding: 20px 0; margin-top: 10px;">
     <canvas id="canvasTelecom" width="380" height="380" style="background: transparent;"></canvas>
 </div>
