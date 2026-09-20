@@ -240,5 +240,5 @@ html_mundo_3d = """
         requestAnimationFrame(renderSistema);
     }
     renderSistema();
-</script>
-
+</html_mundo_3d += '"""'
+st.iframe(f"data:text/html;charset=utf-8,{html_mundo_3d}", height=430)
