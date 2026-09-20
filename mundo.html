@@ -1,1 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; background: #030407; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <canvas id="canvasTelecom" width="380" height="380" style="background: transparent;"></canvas>
+    <script>
+        const canvas = document.getElementById('canvasTelecom');
+        const ctx = canvas.getContext('2d');
+        let rotacion = 0; let tiempo = 0;
 
+        const antenasMundiales = [
+            {x: -40, y: -30}, {x: 50, y: -20},
+            {x: -10, y: 40}, {x: 45, y: 35}
+        ];
+
+        function renderSistema() {
+            ctx.clearRect(0, 0, 380, 380);
+            ctx.save();
