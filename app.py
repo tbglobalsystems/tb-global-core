@@ -1,4 +1,3 @@
-cat << 'EOF' > app.py
 import streamlit as st
 import os
 import psycopg2
@@ -6,6 +5,7 @@ import hashlib
 import pandas as pd
 import time
 
+# 1. CONFIGURACIÓN DE LA PÁGINA CORPORATIVA
 st.set_page_config(
     page_title="T&B Global - Enterprise OS",
     page_icon="⚡",
@@ -13,6 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# 2. INYECCIÓN DE ESTILOS GLOBALES EMPRESARIALES DE ALTA CALIDAD
 st.markdown("""
 <style>
     .brand-container {
@@ -60,9 +61,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Inicializar estados de la sesión de forma segura
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
+# Inicializar datos locales en memoria por si la base de datos falla
 if "nodos_locales" not in st.session_state:
     st.session_state["nodos_locales"] = pd.DataFrame([
         {"lat": 40.7128, "lon": -74.0060, "nombre_nodo": "Nodo Central US (Modo Seguro)"},
@@ -70,6 +73,7 @@ if "nodos_locales" not in st.session_state:
         {"lat": 51.5074, "lon": -0.1278, "nombre_nodo": "Nodo Euro Core (Modo Seguro)"}
     ])
 
+# 3. CONEXIÓN A BASE DE DATOS RELACIONAL CON TIEMPO DE ESPERA (TIMEOUT)
 def conectar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
     if not url_db:
@@ -80,6 +84,7 @@ def conectar_base_datos():
     except Exception:
         return None
 
+# Inicialización automática e inteligente de tablas en PostgreSQL
 db_disponible = False
 status = "DATABASE_URL no configurada (Ejecutando en Modo Local Seguro)"
 
@@ -124,6 +129,7 @@ if conn:
     finally:
         conn.close()
 
+# ENCABEZADO CORPORATIVO
 st.markdown("""
 <div class="brand-container">
     <h1 class="brand-title">⚡ T&B Global</h1>
@@ -133,6 +139,7 @@ st.markdown("""
 
 st.markdown("### 📊 Consola de Comando de Servicios Integrados")
 
+# 5. INICIO DE SESIÓN EN LA BARRA LATERAL
 if st.session_state["usuario_activo"] is None:
     st.warning("🔒 El sistema operativo se encuentra bloqueado. Inicie sesión en la barra lateral con sus credenciales de operador institucional para desbloquear todos los servicios determinados.")
     with st.sidebar:
@@ -177,7 +184,9 @@ else:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
+    # ÁREA 1: MAPA GLOBAL Y CONTROLES GEOGRÁFICOS
     st.markdown("#### 🌐 Área 1: Distribución Geográfica y Telemetría")
+    
     df_nodos = pd.DataFrame(columns=['lat', 'lon', 'nombre_nodo'])
     
     if db_disponible:
@@ -197,6 +206,7 @@ else:
     else:
         st.info("No hay nodos configurados en el mapa.")
     
+    # NUEVOS BOTONES INTERACTIVOS DE SELECCIÓN PARA EL MAPA
     st.write("⚙️ **Controles del Mapa:**")
     col_m1, col_st2, col_m3 = st.columns(3)
     with col_m1:
@@ -209,6 +219,7 @@ else:
         if st.button("📍 Centrar en Servidores de Asia"):
             st.toast("Enfocando telemetría en Asia Core...", icon="🇯🇵")
 
+    # FORMULARIO SEGURO PARA INYECTAR NODOS
     with st.expander("➕ Abrir Consola para Registrar Nuevo Servidor/Canal", expanded=True):
         with st.form("nuevo_nodo_form"):
             n_lat = st.number_input("Latitud Geográfica:", value=0.0, format="%.4f")
@@ -229,11 +240,3 @@ else:
                                 st.success(f"Servidor '{n_name}' registrado en Postgres exitosamente.")
                                 time.sleep(0.5)
                                 st.rerun()
-                            except Exception as e:
-                                st.error(f"Error al guardar en base de datos: {str(e)}")
-                            finally:
-                                db_conn.close()
-                    else:
-                        nuevo_registro = pd.DataFrame([{"lat": n_lat, "lon": n_lon, "nombre_nodo": f"{n_name} (Local)"}])
-                        st.session_state["nodos_locales"] = pd.concat([st.session_state["nodos_locales"], nuevo_registro], ignore_index=True)
-                        st.success(f"Servidor '{n_name}' guardado en memoria de sesión.")
