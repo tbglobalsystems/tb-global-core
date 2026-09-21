@@ -112,7 +112,7 @@ IDIOMAS_SOPORTADOS = {
         "data": {
             "title": "SISTEMA OPERACIONAL QUANTUM ENTERPRISE",
             "subtitle": "Console de Comando de Serviços Integrados",
-            "lock": "🔒 O sistema operacional está bloqueado. Por favor, faça login na barra lateral.",
+            "lock": "🔒 O sistema operacional está bocado. Por favor, faça login na barra lateral.",
             "access": "Acesso Centralizado",
             "user": "ID do Usuário Operador",
             "pin": "PIN de Segurança (4 dígitos)",
@@ -132,7 +132,7 @@ IDIOMAS_SOPORTADOS = {
             "lon": "Longitude Geográfica",
             "ident": "Nome Identificador do Canal ou Servidor",
             "execute": "EXECUTAR: Aprovisionar e Salvar",
-            "err_empty": "O nome do identificador não puede estar vazio.",
+            "err_empty": "O nome do identificador não pode estar vazio.",
             "success_reg": "registrado em memória cloud com sucesso.",
             "area2": "Área 2: Módulo de Foco de Inteligência Virtual",
             "select_analysis": "Selecione a área de análise que deseja que o sistema operacional principal execute:",
