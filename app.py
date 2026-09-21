@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# INFRAESTRUCTURA DE IDIOMAS DE LA INDUSTRIA (Módulo de Recursos Estructurado)
+# INFRAESTRUCTURA DE IDIOMAS DE LA INDUSTRIA (Matriz de Recursos Cerrada)
 IDIOMAS_SOPORTADOS = {
     "es": {
         "name": "Español",
@@ -139,7 +139,7 @@ IDIOMAS_SOPORTADOS = {
             "ana1": "Análise de Telemetria Global",
             "ana2": "Monitoramento de Logs de Segurança",
             "ana3": "Otimização de Tráfego de Nodos",
-            "active_mod": "Módulo ativo seleccionado atualmente",
+            "active_mod": "Módulo ativo selecionado actualmente",
             "monitor": "Visualizar Monitor de Carga e Tráfego Quântico",
             "flow": "Fluxo de pacotes de telemetria entre nodos ativos",
             "metric1": "Servidores Conectados",
