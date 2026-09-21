@@ -1,4 +1,3 @@
-
 import streamlit as st
 import os
 import pandas as pd
@@ -12,11 +11,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# INFRAESTRUCTURA DE IDIOMAS DE LA INDUSTRIA (Módulo de Recursos Independiente)
+# INFRAESTRUCTURA DE IDIOMAS DE LA INDUSTRIA (Módulo de Recursos Estructurado)
 IDIOMAS_SOPORTADOS = {
     "es": {
         "name": "Español",
-        "flag": "🇪🇸",
         "data": {
             "title": "QUANTUM ENTERPRISE OPERATING SYSTEM",
             "subtitle": "Consola de Comando de Servicios Integrados",
@@ -64,7 +62,6 @@ IDIOMAS_SOPORTADOS = {
     },
     "en": {
         "name": "English",
-        "flag": "🇺🇸",
         "data": {
             "title": "QUANTUM ENTERPRISE OPERATING SYSTEM",
             "subtitle": "Integrated Services Command Console",
@@ -112,11 +109,10 @@ IDIOMAS_SOPORTADOS = {
     },
     "pt": {
         "name": "Português",
-        "flag": "🇧🇷",
         "data": {
             "title": "SISTEMA OPERACIONAL QUANTUM ENTERPRISE",
             "subtitle": "Console de Comando de Serviços Integrados",
-            "lock": "🔒 O sistema operacional está bloqueado. Por favor, faça login na barra lateral.",
+            "lock": "🔒 O sistema operacional está bocado. Por favor, faça login na barra lateral.",
             "access": "Acesso Centralizado",
             "user": "ID do Usuário Operador",
             "pin": "PIN de Segurança (4 dígitos)",
@@ -131,7 +127,7 @@ IDIOMAS_SOPORTADOS = {
             "toast_us": "Focando telemetria nos Nodos US Core...",
             "toast_eu": "Focando telemetria no Euro Link...",
             "toast_as": "Focando telemetria no Asia Core...",
-            "open_console": "Abrir Console para Registrar Novo Servidor/Canal",
+            "open_console": "Abrir Console para Registrar Novo Server/Canal",
             "lat": "Latitude Geográfica",
             "lon": "Longitude Geográfica",
             "ident": "Nome Identificador do Canal ou Servidor",
@@ -151,7 +147,7 @@ IDIOMAS_SOPORTADOS = {
             "metric3": "Latência Global Média",
             "chart_x": "Nodos Operativos",
             "chart_y": "Requisições/Min",
-            "area3": "Área 3: Registro Historico e Logs de Auditoria Institucional",
+            "area3": "Área 3: Registro Histórico e Logs de Auditoria Institucional",
             "col1": "Data/Hora",
             "col2": "Operador",
             "col3": "Ação Executada",
@@ -160,7 +156,6 @@ IDIOMAS_SOPORTADOS = {
     },
     "zh-CN": {
         "name": "中文",
-        "flag": "🇨🇳",
         "data": {
             "title": "量子企业操作系统",
             "subtitle": "综合服务命令控制台",
@@ -221,3 +216,5 @@ if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
 if "nodos_locales" not in st.session_state:
+    st.session_state["nodos_locales"] = pd.DataFrame([
+        {"lat": 40.7128, "lon": -74.0060, "nombre_nodo": "Nodo Central US"},
