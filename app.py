@@ -64,7 +64,6 @@ if st.session_state["usuario_activo"] is None:
         if st.button("Validar Credenciales"):
             if u and p:
                 st.session_state["usuario_activo"] = u
-                st.links = "Modo Local Activo"
                 st.rerun()
 else:
     with st.sidebar:
@@ -80,4 +79,4 @@ else:
         {"lat": 51.5074, "lon": -0.1278, "nombre_nodo": "Nodo Euro Core"}
     ])
     st.map(df_nodos, zoom=1, use_container_width=True)
-    st.info("Módulo de infraestructura en línea ejecutándose de forma correcta."
+    st.info("Módulo de infraestructura en línea ejecutándose de forma correcta.")
