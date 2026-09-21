@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# MATRIZ DE RECURSOS IDIOMÁTICOS CERRADA Y COMPLETA (100% INMUNE A ERRORES)
+# MATRIZ DE RECURSOS IDIOMÁTICOS CERRADA Y COMPLETA
 IDIOMAS_SOPORTADOS = {
     "es": {
         "name": "Español",
@@ -47,7 +47,7 @@ IDIOMAS_SOPORTADOS = {
             "ana3": "Optimización de Tráfico de Nodos",
             "active_mod": "Módulo activo seleccionado actualmente",
             "monitor": "Visualizar Monitor de Carga y Tráfico Cuántico",
-            "flow": "Flujo de paquetes telemetritos entre nodos activos",
+            "flow": "Flux de paquetes telemetritos entre nodos activos",
             "metric1": "Servidores Conectados",
             "metric2": "Ancho de Banda Asignado",
             "metric3": "Latencia Global Media",
@@ -141,7 +141,7 @@ IDIOMAS_SOPORTADOS = {
             "ana3": "Otimização de Tráfego de Nodos",
             "active_mod": "Módulo ativo selecionado atualmente",
             "monitor": "Visualizar Monitor de Carga e Tráfego Quântico",
-            "flow": "Fluxo de pacotes de telemetria entre nodos activos",
+            "flow": "Fluxo de pacotes de telemetria entre nodos ativos",
             "metric1": "Servidores Conectados",
             "metric2": "Largura de Banda Alocada",
             "metric3": "Latência Global Média",
@@ -203,18 +203,18 @@ IDIOMAS_SOPORTADOS = {
     }
 }
 
+# Inicializar estados de control de idioma nativo
 if "lang_code" not in st.session_state:
     st.session_state["lang_code"] = "es"
 
+# Motor de traducción nativo
 def T(key):
     return IDIOMAS_SOPORTADOS.get(st.session_state["lang_code"], {}).get("data", {}).get(key, key)
 
+# Inicializar estados funcionales de la sesión
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
 if "nodos_locales" not in st.session_state:
     st.session_state["nodos_locales"] = pd.DataFrame([
         {"lat": 40.7128, "lon": -74.0060, "nombre_nodo": "Nodo Central US"},
-        {"lat": 34.0522, "lon": -118.2437, "nombre_nodo": "Nodo Pacifico US"},
-        {"lat": 51.5074, "lon": -0.1278, "nombre_nodo": "Nodo Euro Core"}
-    ])
