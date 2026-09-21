@@ -46,7 +46,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Inicializar estados de la sesión para los nodos locales
+# Inicializar estados de la sesión de forma segura
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
@@ -105,7 +105,7 @@ else:
         if st.button("📍 Centrar en Servidores de Asia"):
             st.toast("Enfocando telemetría en Asia Core...", icon="🇯🇵")
 
-    # 5. FORMULARIO RECUPERADO PARA REGISTRAR NUEVOS SERVIDORES
+    # 5. FORMULARIO PARA REGISTRAR NUEVOS SERVIDORES
     st.markdown("---")
     with st.expander("➕ Abrir Consola para Registrar Nuevo Servidor/Canal", expanded=False):
         with st.form("nuevo_nodo_form"):
@@ -139,7 +139,34 @@ else:
     )
     st.info(f"Módulo activo seleccionado actualmente: **{enfoque_ia}**")
 
-    # 7. NUEVO PANEL RECUPERADO DE AUDITORÍA HISTÓRICA
+    # NUEVO MÓDULO: SIMULACIÓN EN TIEMPO REAL DE TRÁFICO DE DATOS
+    with st.expander("📈 Visualizar Monitor de Carga y Tráfico Cuántico", expanded=True):
+        st.write("📡 **Flujo de paquetes telemetritos entre nodos activos:**")
+        # Generar métricas dinámicas basadas en los nodos inyectados
+        total_nodos = len(st.session_state["nodos_locales"])
+        col_t1, col_t2, col_t3 = st.columns(3)
+        with col_t1:
+            st.metric(label="Servidores Conectados", value=f"{total_nodos} / 12")
+        with col_t2:
+            st.metric(label="Ancho de Banda Asignado", value=f"{total_nodos * 45} Gbps", delta="+15% optimizado")
+        with col_t3:
+            st.metric(label="Latencia Global Media", value="18 ms", delta="-4 ms eficiente")
+        
+        # Simulación de tráfico en gráfico nativo
+        chart_data = pd.DataFrame({
+            'Nodos Operativos': st.session_state["nodos_locales"]["nombre_nodo"],
+            'Peticiones/Min': [120, 240, 310] + [150] * (total_nodos - 3)
+        })
+        st.bar_chart(chart_data, x='Nodos Operativos', y='Peticiones/Min')
+
+    # 7. PANEL DE AUDITORÍA HISTÓRICA CON BOTÓN DE DESCARGA EXCEL NATIVO
     st.markdown("---")
     st.markdown("#### 📑 Área 3: Registro Histórico y Logs de Auditoría Institucional")
-    st.dataframe(st.session_state["bitacora_logs"].head(5), use_container_width=True)
+    st.dataframe(st.session_state["bitacora_logs"], use_container_width=True)
+    
+    # Conversión nativa a CSV para el botón de descarga rápida empresarial
+    csv_data = st.session_state["bitacora_logs"].to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 Exportar Historial de Auditoría Corporativa (CSV)",
+        data=csv_data,
+        file_name=f"log_auditoria_{time.strftime('%Y%md_%H%M%S')}.csv",
