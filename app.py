@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import psycopg2
+import hashlib
 import pandas as pd
 import time
 
@@ -52,7 +54,65 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. ENCABEZADO CORPORATIVO PRINCIPAL
+if "usuario_activo" not in st.session_state:
+    st.session_state["usuario_activo"] = None
+
+# 3. CONEXIÓN A BASE DE DATOS RELACIONAL
+def conectar_base_datos():
+    url_db = os.environ.get("DATABASE_URL")
+    if not url_db:
+        return None
+    try:
+        conn = psycopg2.connect(url_db)
+        return conn
+    except:
+        return None
+
+# Inicialización automática de tablas en PostgreSQL
+conn = conectar_base_datos()
+if conn:
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios_sistema (
+                id SERIAL PRIMARY KEY,
+                usuario VARCHAR(50) UNIQUE NOT NULL,
+                pin_hash VARCHAR(64) NOT NULL,
+                rol VARCHAR(30) NOT NULL
+            );
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS logs_auditoria (
+                id SERIAL PRIMARY KEY,
+                usuario_operador VARCHAR(50) NOT NULL,
+                accion_ejecutada TEXT NOT NULL,
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS nodos_mapa (
+                id SERIAL PRIMARY KEY,
+                lat FLOAT NOT NULL,
+                lon FLOAT NOT NULL,
+                nombre_nodo VARCHAR(100) NOT NULL
+            );
+        """)
+        cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
+        if cursor.fetchone() == 0:
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
+            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (35.6762, 139.6503, 'Nodo Asia Link');")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        status = "PostgreSQL Conectado (Esquema Completo)"
+    except:
+        status = "Error al inicializar tablas"
+else:
+    status = "DATABASE_URL no configurada"
+
+# 4. ENCABEZADO CORPORATIVO PRINCIPAL
 st.markdown("""
 <div class="brand-container">
     <h1 class="brand-title">⚡ T&B Global</h1>
@@ -60,47 +120,106 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("### 📊 Consola Unificada de Control y Servicios Globales")
-st.write("Bienvenido al Centro de Mando Corporativo. Todas las herramientas operativas están aprovisionadas y listas para su uso directo.")
+st.markdown("### 📊 Consola de Comando e Infraestructura Unificada")
 
-# MÓDULO 1: PORTAL DE RED (EL MAPA GEOGRÁFICO DE NODOS)
-st.write("---")
-st.markdown("#### 🌐 Monitoreo de Nodos Cuánticos y Distribución Global")
-coordenadas_datos = {
-    'lat': [40.7128, 34.0522, 51.5074, 35.6762],
-    'lon': [-74.0060, -118.2437, -0.1278, 139.6503],
-    'nombre_nodo': ['Nodo Central US', 'Nodo Pacifico US', 'Nodo Euro Core', 'Nodo Asia Link']
-}
-df_nodos = pd.DataFrame(coordenadas_datos)
-st.map(df_nodos, zoom=1, use_container_width=True)
-st.dataframe(df_nodos, use_container_width=True, hide_index=True)
+# 5. RETORNO DE LA CERRADURA: ACCESO CENTRALIZADO EN LA BARRA LATERAL
+if st.session_state["usuario_activo"] is None:
+    st.warning("🔒 El sistema operativo se encuentra bloqueado. Inicie sesión en la barra lateral con sus credenciales de operador institucional para desbloquear todos los servicios determinados.")
+    with st.sidebar:
+        st.markdown("### 🔐 Acceso Centralizado")
+        u = st.text_input("ID de Usuario Operador:")
+        p = st.text_input("PIN de Seguridad (4 dígitos):", type="password", max_chars=4)
+        if st.button("Validar Credenciales"):
+            h = hashlib.sha256(p.encode()).hexdigest()
+            db_conn = conectar_base_datos()
+            if db_conn:
+                cursor = db_conn.cursor()
+                cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (u, h))
+                res = cursor.fetchone()
+                if res:
+                    st.session_state["usuario_activo"] = u
+                    cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Inicio de sesión exitoso. Ecosistema de control desbloqueado.');", (u,))
+                    db_conn.commit()
+                    cursor.close()
+                    db_conn.close()
+                    st.rerun()
+                else:
+                    st.error("PIN o usuario incorrectos.")
+                    cursor.close()
+                    db_conn.close()
+else:
+    with st.sidebar:
+        st.success(f"Operador en Línea: {st.session_state['usuario_activo']}")
+        st.caption(f"Infraestructura Cloud: {status}")
+        if st.button("🔒 Cerrar Sesión Corporativa"):
+            st.session_state["usuario_activo"] = None
+            st.rerun()
 
-# MÓDULO 2: PASARELA STRIPE
-st.write("---")
-st.markdown("#### 💳 Pasarela Corporativa Global (Stripe Billing Integration)")
-st.markdown("<div class='card-premium'><h5>Plan Único de Contenido OS</h5><p>Monitoreo de Canales + Acceso IA Ilimitado + Soporte Dedicado 24/7</p><b>$199 USD / mes</b></div>", unsafe_allow_html=True)
+    # RETORNO MÓDULO 1: PORTAL DE RED (EL MAPA GEOGRÁFICO DE NODOS)
+    st.markdown("#### 🌐 Monitoreo de Nodos Cuánticos y Distribución Global")
+    db_conn = conectar_base_datos()
+    df_nodos = pd.DataFrame(columns=['lat', 'lon', 'nombre_nodo'])
+    if db_conn:
+        try:
+            df_nodos = pd.read_sql_query("SELECT lat, lon, nombre_nodo FROM nodos_mapa;", db_conn)
+            db_conn.close()
+        except:
+            pass
+            
+    if not df_nodos.empty:
+        st.map(df_nodos, zoom=1, use_container_width=True)
+        st.dataframe(df_nodos, use_container_width=True, hide_index=True)
+    else:
+        st.info("No se han cargado nodos dinámicos desde PostgreSQL.")
 
-# BOTÓN DE STRIPE EN LÍNEA DIRECTO
-if st.button("Simular Pasarela: Suscribir Servicio Premium"):
-    with st.spinner("Procesando pago seguro en Stripe Cloud Gateway..."):
-        time.sleep(1.0)
-    st.success("✨ Transacción aprobada con éxito en Stripe Sandbox. ID de Cargo: ch_test_9A12B8")
+    # RETORNO MÓDULO 2: PASARELA STRIPE PREMIUM
+    st.write("---")
+    st.markdown("#### 💳 Pasarela Corporativa Global (Stripe Billing Integration)")
+    st.markdown("<div class='card-premium'><h5>Plan Único de Contenido OS</h5><p>Monitoreo de Canales + Acceso IA Ilimitado + Soporte Dedicado 24/7</p><b>$199 USD / mes</b></div>", unsafe_allow_html=True)
+    if st.button("Simular Pasarela: Suscribir Servicio Premium"):
+        with st.spinner("Procesando pago seguro en Stripe Cloud Gateway..."):
+            time.sleep(1.0)
+        st.success("✨ Transacción aprobada con éxito en Stripe Sandbox. ID de Cargo: ch_test_9A12B8")
+        db_conn = conectar_base_datos()
+        if db_conn:
+            cursor = db_conn.cursor()
+            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Suscripción corporativa simulada exitosamente vía Stripe.');", (st.session_state["usuario_activo"],))
+            db_conn.commit()
+            cursor.close()
+            db_conn.close()
 
-# MÓDULO 3: ORQUESTADOR CREWAI OPTIMIZADO PARA MULTIMEDIA
-st.write("---")
-st.markdown("#### 🤖 Optimización Algorítmica y Estrategia de Contenido (IA Engine)")
+    # RETORNO MÓDULO 3: INGENIERÍA DE NODOS (INYECTOR GEOGRÁFICO AL MAPA EN VIVO)
+    st.write("---")
+    st.markdown("#### 🛰️ Inyección e Ingeniería de Nodos de Red")
+    with st.expander("Desplegar Consola de Registro Geográfico de Audiencia e Infraestructura", expanded=True):
+        with st.form("nuevo_nodo_form"):
+            n_lat = st.number_input("Latitud del Servidor / Audiencia:", value=0.0, format="%.4f")
+            n_lon = st.number_input("Longitud del Servidor / Audiencia:", value=0.0, format="%.4f")
+            n_name = st.text_input("Identificador de Canal o Nodo:")
+            btn_nodo = st.form_submit_button("Aprovisionar Nodo en Mapa")
+            if btn_nodo and n_name != "":
+                db_conn = conectar_base_datos()
+                if db_conn:
+                    try:
+                        cursor = db_conn.cursor()
+                        cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (%s, %s, %s);", (n_lat, n_lon, n_name))
+                        cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], f"Inyección de nodo geográfico completada para: {n_name}."))
+                        db_conn.commit()
+                        cursor.close()
+                        db_conn.close()
+                        st.success(f"⚡ Servidor '{n_name}' registrado. Refresque la página para visualizarlo en el mapa superior.")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
 
-# BOTÓN DE CREWAI EN LÍNEA DIRECTO
-if st.button("🚀 Lanzar Auditoría de Canales e IA Autónoma"):
-    with st.spinner("Inicializando agentes cognitivos y analizando algoritmos multimedia..."):
-        time.sleep(1.5)
-    st.success("🤖 ¡Análisis de Canales Completado de forma óptima por la IA!")
-    st.info("Reporte Estratégico: Distribución en TikTok estable. Recomendación de Contenido: Ajustar el empaque (títulos y miniaturas) en los próximos videos largos de YouTube para aumentar la retención de audiencia en un 15%.")
-
-st.write("---")
-st.write("### Telemetría de Módulos Base")
-datos_operaciones = pd.DataFrame({
-    "Módulo Core": ["Criptografía Avanzada", "Base de Datos Local", "Auditoría Engine", "Stripe Billing Engine"],
-    "Estado": ["Operando", "Estable (Bypass)", "Activo (Capturando)", "Sandbox Operativo"]
-})
-st.table(datos_operaciones)
+    # RETORNO MÓDULO 4: ORQUESTADOR CREWAI OPTIMIZADO PARA CREADORES
+    st.write("---")
+    st.markdown("#### 🤖 Optimización Algorítmica y Estrategia de Contenido (IA Engine)")
+    if st.button("🚀 Lanzar Auditoría de Canales e IA Autónoma"):
+        with st.spinner("Inicializando agentes cognitivos y analizando algoritmos multimedia..."):
+            time.sleep(1.5)
+        st.success("🤖 ¡Análisis de Canales Completado de forma óptima por la IA!")
+        st.info("Reporte Estratégico: Distribución en TikTok estable. Recomendación de Contenido: Ajustar el empaque (títulos y miniaturas) en los próximos videos largos de YouTube para aumentar la retención de audiencia en un 15%.")
+        db_conn = conectar_base_datos()
+        if db_conn:
+            cursor = db_conn.cursor()
+            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Auditoría algorítmica CrewAI ejecutada en el panel unificado.');", (st.session_state["usuario_activo"],))
