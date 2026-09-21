@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. INYECCIÓN DE ESTILOS GLOBALES EMRESARIALES DE ALTA CALIDAD
+# 2. INYECCIÓN DE ESTILOS GLOBALES EMPRESARIALES DE ALTA CALIDAD
 st.markdown("""
 <style>
     .brand-container {
@@ -61,63 +61,73 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Inicializar estados de la sesión de forma segura
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
-# 3. CONEXIÓN A BASE DE DATOS RELACIONAL
+# Inicializar datos locales en memoria por si la base de datos falla (Evita congelamientos)
+if "nodos_locales" not in st.session_state:
+    st.session_state["nodos_locales"] = pd.DataFrame([
+        {"lat": 40.7128, "lon": -74.0060, "nombre_nodo": "Nodo Central US (Modo Seguro)"},
+        {"lat": 34.0522, "lon": -118.2437, "nombre_nodo": "Nodo Pacifico US (Modo Seguro)"},
+        {"lat": 51.5074, "lon": -0.1278, "nombre_nodo": "Nodo Euro Core (Modo Seguro)"}
+    ])
+
+# 3. CONEXIÓN A BASE DE DATOS RELACIONAL CON TIEMPO DE ESPERA (TIMEOUT)
 def conectar_base_datos():
     url_db = os.environ.get("DATABASE_URL")
     if not url_db:
         return None
     try:
-        conn = psycopg2.connect(url_db)
+        conn = psycopg2.connect(url_db, connect_timeout=3)
         return conn
-    except:
+    except Exception:
         return None
 
-# Inicialización automática de tablas en PostgreSQL
+# Inicialización automática e inteligente de tablas en PostgreSQL
+db_disponible = False
+status = "DATABASE_URL no configurada (Ejecutando en Modo Local Seguro)"
+
 conn = conectar_base_datos()
 if conn:
     try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS usuarios_sistema (
-                id SERIAL PRIMARY KEY,
-                usuario VARCHAR(50) UNIQUE NOT NULL,
-                pin_hash VARCHAR(64) NOT NULL,
-                rol VARCHAR(30) NOT NULL
-            );
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS logs_auditoria (
-                id SERIAL PRIMARY KEY,
-                usuario_operador VARCHAR(50) NOT NULL,
-                accion_ejecutada TEXT NOT NULL,
-                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS nodos_mapa (
-                id SERIAL PRIMARY KEY,
-                lat FLOAT NOT NULL,
-                lon FLOAT NOT NULL,
-                nombre_nodo VARCHAR(100) NOT NULL
-            );
-        """)
-        cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
-        if cursor.fetchone() == 0:
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
-            cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (35.6762, 139.6503, 'Nodo Asia Link');")
-        conn.commit()
-        cursor.close()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS usuarios_sistema (
+                    id SERIAL PRIMARY KEY,
+                    usuario VARCHAR(50) UNIQUE NOT NULL,
+                    pin_hash VARCHAR(64) NOT NULL,
+                    rol VARCHAR(30) NOT NULL
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS logs_auditoria (
+                    id SERIAL PRIMARY KEY,
+                    usuario_operador VARCHAR(50) NOT NULL,
+                    accion_ejecutada TEXT NOT NULL,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS nodos_mapa (
+                    id SERIAL PRIMARY KEY,
+                    lat FLOAT NOT NULL,
+                    lon FLOAT NOT NULL,
+                    nombre_nodo VARCHAR(100) NOT NULL
+                );
+            """)
+            cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
+            if cursor.fetchone() == 0:
+                cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
+                cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
+                cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
+            conn.commit()
+        status = "PostgreSQL Conectado Activo"
+        db_disponible = True
+    except Exception as e:
+        status = f"Modo Contingencia (Error DB: {str(e)})"
+    finally:
         conn.close()
-        status = "PostgreSQL Conectado"
-    except:
-        status = "Error al inicializar tablas"
-else:
-    status = "DATABASE_URL no configurada"
 
 # ENCABEZADO CORPORATIVO
 st.markdown("""
@@ -136,24 +146,36 @@ if st.session_state["usuario_activo"] is None:
         st.markdown("### 🔐 Acceso Centralizado")
         u = st.text_input("ID de Usuario Operador:")
         p = st.text_input("PIN de Seguridad (4 dígitos):", type="password", max_chars=4)
+        
+        if not db_disponible:
+            st.info("💡 Modo seguro activo: ingrese cualquier usuario/PIN para pruebas locales.")
+            
         if st.button("Validar Credenciales"):
-            h = hashlib.sha256(p.encode()).hexdigest()
-            db_conn = conectar_base_datos()
-            if db_conn:
-                cursor = db_conn.cursor()
-                cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (u, h))
-                res = cursor.fetchone()
-                if res:
-                    st.session_state["usuario_activo"] = u
-                    cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Inicio de sesión exitoso.');", (u,))
-                    db_conn.commit()
-                    cursor.close()
-                    db_conn.close()
-                    st.rerun()
+            if u and p:
+                if db_disponible:
+                    h = hashlib.sha256(p.encode()).hexdigest()
+                    db_conn = conectar_base_datos()
+                    if db_conn:
+                        try:
+                            with db_conn.cursor() as cursor:
+                                cursor.execute("SELECT rol FROM usuarios_sistema WHERE usuario=%s AND pin_hash=%s;", (u, h))
+                                res = cursor.fetchone()
+                                if res:
+                                    st.session_state["usuario_activo"] = u
+                                    cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Inicio de sesión exitoso.');", (u,))
+                                    db_conn.commit()
+                                    st.rerun()
+                                else:
+                                    st.error("PIN o usuario incorrectos.")
+                        except Exception as e:
+                            st.error(f"Error de consulta: {str(e)}")
+                        finally:
+                            db_conn.close()
                 else:
-                    st.error("PIN o usuario incorrectos.")
-                    cursor.close()
-                    db_conn.close()
+                    st.session_state["usuario_activo"] = u
+                    st.rerun()
+            else:
+                st.error("Por favor, rellene todos los campos.")
 else:
     with st.sidebar:
         st.success(f"Operador en Línea: {st.session_state['usuario_activo']}")
@@ -164,17 +186,25 @@ else:
 
     # ÁREA 1: MAPA GLOBAL Y CONTROLES GEOGRÁFICOS
     st.markdown("#### 🌐 Área 1: Distribución Geográfica y Telemetría")
-    db_conn = conectar_base_datos()
+    
     df_nodos = pd.DataFrame(columns=['lat', 'lon', 'nombre_nodo'])
-    if db_conn:
-        try:
-            df_nodos = pd.read_sql_query("SELECT lat, lon, nombre_nodo FROM nodos_mapa;", db_conn)
-            db_conn.close()
-        except:
-            pass
+    
+    if db_disponible:
+        db_conn = conectar_base_datos()
+        if db_conn:
+            try:
+                df_nodos = pd.read_sql_query("SELECT lat, lon, nombre_nodo FROM nodos_mapa;", db_conn)
+            except Exception:
+                df_nodos = st.session_state["nodos_locales"]
+            finally:
+                db_conn.close()
+    else:
+        df_nodos = st.session_state["nodos_locales"]
             
     if not df_nodos.empty:
         st.map(df_nodos, zoom=1, use_container_width=True)
+    else:
+        st.info("No hay nodos configurados en el mapa.")
     
     # NUEVOS BOTONES INTERACTIVOS DE SELECCIÓN PARA EL MAPA
     st.write("⚙️ **Controles del Mapa:**")
@@ -189,51 +219,24 @@ else:
         if st.button("📍 Centrar en Servidores de Asia"):
             st.toast("Enfocando telemetría en Asia Core...", icon="🇯🇵")
 
-    # FORMULARIO CON BOTÓN REAL PARA INYECTAR NODOS
+    # FORMULARIO SEGURO PARA INYECTAR NODOS
     with st.expander("➕ Abrir Consola para Registrar Nuevo Servidor/Canal", expanded=True):
         with st.form("nuevo_nodo_form"):
             n_lat = st.number_input("Latitud Geográfica:", value=0.0, format="%.4f")
             n_lon = st.number_input("Longitud Geográfica:", value=0.0, format="%.4f")
             n_name = st.text_input("Nombre identificador del Canal o Servidor:")
-            btn_nodo = st.form_submit_button("🚀 EJECUTAR: Aprovisionar y Guardar en Postgres")
-            if btn_nodo and n_name != "":
-                db_conn = conectar_base_datos()
-                if db_conn:
-                    try:
-                        cursor = db_conn.cursor()
-                        cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (%s, %s, %s);", (n_lat, n_lon, n_name))
-                        cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], f"Inyectó nodo: {n_name}"))
-                        db_conn.commit()
-                        cursor.close()
-                        db_conn.close()
-                        st.success(f"Servidor '{n_name}' registrado con éxito. Refresque para actualizar el mapa.")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
-
-    # ÁREA 2: PASARELA STRIPE CON BOTONES DE INTERACCIÓN REALES
-    st.write("---")
-    st.markdown("#### 💳 Área 2: Pasarela Corporativa de Pagos (Stripe Gateway)")
-    
-    # selectbox que actúa como selector de planes real para el cliente
-    plan_seleccionado = st.selectbox("Seleccione el Nivel de Licencia a Operar:", ["Plan Básico OS ($49/mes)", "Plan Enterprise Premium ($199/mes)", "Plan Industrial Quantum ($299/mes)"])
-    
-    st.markdown(f"<div class='card-premium'><h5>Licencia Configurada: {plan_seleccionado}</h5><p>Aprovisionamiento automático de base de datos + cifrado de credenciales.</p></div>", unsafe_allow_html=True)
-    
-    if st.button("💳 EJECUTAR: Procesar Cobro Seguro en Stripe Sandbox"):
-        with st.spinner("Conectando de forma segura a Stripe Cloud..."):
-            time.sleep(1.0)
-        st.success(f"✨ Transacción aprobada en Stripe para el {plan_seleccionado}. ID de Cargo: ch_test_9A12B8")
-        db_conn = conectar_base_datos()
-        if db_conn:
-            cursor = db_conn.cursor()
-            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], f"Simuló pago seguro vía Stripe para: {plan_seleccionado}"))
-            db_conn.commit()
-            cursor.close()
-            db_conn.close()
-
-    # ÁREA 3: INTELIGENCIA ARTIFICIAL CON CONTROLES INTERACTIVOS REALES
-    st.write("---")
-    st.markdown("#### 🤖 Área 3: Orquestación Algorítmica de Canales (CrewAI Core)")
-    
-    # Botones radiales interactivos para que la IA sepa qué buscar
-    enfoque_ia = st.radio("Seleccione el área de análisis que desea que eje
+            btn_nodo = st.form_submit_button("🚀 EJECUTAR: Aprovisionar y Guardar")
+            
+            if btn_nodo:
+                if n_name.strip() != "":
+                    if db_disponible:
+                        db_conn = conectar_base_datos()
+                        if db_conn:
+                            try:
+                                with db_conn.cursor() as cursor:
+                                    cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (%s, %s, %s);", (n_lat, n_lon, n_name))
+                                    cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], f"Inyectó nodo: {n_name}"))
+                                    db_conn.commit()
+                                st.success(f"Servidor '{n_name}' registrado en Postgres exitosamente.")
+                                time.sleep(0.5)
+                                st.rerun()
