@@ -2,8 +2,9 @@ import streamlit as st
 import os
 import psycopg2
 import pandas as pd
+import time
 
-# 1. CONFIGURACIÓN CORPORATIVA
+# 1. CONFIGURACIÓN CORPORATIVA DE ALTA GAMA
 st.set_page_config(
     page_title="T&B Global - Enterprise OS",
     page_icon="⚡",
@@ -11,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. DISEÑO PREMIUM
+# 2. INYECCIÓN DE ESTILOS PREMIUM
 st.markdown("""
 <style>
     .brand-container {
@@ -35,11 +36,31 @@ st.markdown("""
         font-weight: 600 !important;
         letter-spacing: 5px !important;
     }
+    .stButton>button {
+        width: 100% !important;
+        background-color: #0284c7 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+# Inicializar estados de la sesión para los nodos locales
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
+
+if "nodos_locales" not in st.session_state:
+    st.session_state["nodos_locales"] = pd.DataFrame([
+        {"lat": 40.7128, "lon": -74.0060, "nombre_nodo": "Nodo Central US"},
+        {"lat": 34.0522, "lon": -118.2437, "nombre_nodo": "Nodo Pacifico US"},
+        {"lat": 51.5074, "lon": -0.1278, "nombre_nodo": "Nodo Euro Core"}
+    ])
+
+if "bitacora_logs" not in st.session_state:
+    st.session_state["bitacora_logs"] = pd.DataFrame([
+        {"Fecha/Hora": time.strftime("%Y-%m-%d %H:%M:%S"), "Operador": "Sistema", "Acción Ejecutada": "Infraestructura Quantum inicializada con éxito."}
+    ])
 
 st.markdown("""
 <div class="brand-container">
@@ -50,7 +71,7 @@ st.markdown("""
 
 st.markdown("### 📊 Consola de Comando de Servicios Integrados")
 
-# 3. ACCESO CENTRALIZADO
+# 3. BARRA LATERAL DE CONTROL DE ACCESO
 if st.session_state["usuario_activo"] is None:
     st.warning("🔒 El sistema operativo se encuentra bloqueado. Inicie sesión en la barra lateral.")
     with st.sidebar:
@@ -68,33 +89,57 @@ else:
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-    # 4. TELEMETRÍA Y MAPA Y BOTONES
+    # 4. TELEMETRÍA Y DISTRIBUCIÓN GEOGRÁFICA
     st.markdown("#### 🌐 Área 1: Distribución Geográfica y Telemetría")
+    st.map(st.session_state["nodos_locales"], zoom=1, use_container_width=True)
     
-    df_nodos = pd.DataFrame([
-        {"lat": 40.7128, "lon": -74.0060, "nombre_nodo": "Nodo Central US"},
-        {"lat": 34.0522, "lon": -118.2437, "nombre_nodo": "Nodo Pacifico US"},
-        {"lat": 51.5074, "lon": -0.1278, "nombre_nodo": "Nodo Euro Core"}
-    ])
-    st.map(df_nodos, zoom=1, use_container_width=True)
-    
-    st.write("⚙️ **Controles de Enfoque:**")
+    st.write("⚙️ **Controles de Enfoque de Telemetría:**")
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("📍 América del Norte"):
-            st.toast("Enfocando US Core...", icon="🌎")
+        if st.button("📍 Centrar en América del Norte"):
+            st.toast("Enfocando telemetría en US Core Nodos...", icon="🌎")
     with col2:
-        if st.button("📍 Región Europea"):
-            st.toast("Enfocando Euro Link...", icon="🇪🇺")
+        if st.button("📍 Centrar en Región Europea"):
+            st.toast("Enfocando telemetría en Euro Link...", icon="🇪🇺")
     with col3:
-        if st.button("📍 Servidores de Asia"):
-            st.toast("Enfocando Asia Core...", icon="🇯🇵")
+        if st.button("📍 Centrar en Servidores de Asia"):
+            st.toast("Enfocando telemetría en Asia Core...", icon="🇯🇵")
 
-    # 5. ENFOQUE DE INTELIGENCIA VIRTUAL
+    # 5. FORMULARIO RECUPERADO PARA REGISTRAR NUEVOS SERVIDORES
+    st.markdown("---")
+    with st.expander("➕ Abrir Consola para Registrar Nuevo Servidor/Canal", expanded=False):
+        with st.form("nuevo_nodo_form"):
+            n_lat = st.number_input("Latitud Geográfica:", value=0.0, format="%.4f")
+            n_lon = st.number_input("Longitud Geográfica:", value=0.0, format="%.4f")
+            n_name = st.text_input("Nombre identificador del Canal o Servidor:")
+            btn_nodo = st.form_submit_button("🚀 EJECUTAR: Aprovisionar y Guardar")
+            
+            if btn_nodo:
+                if n_name.strip() != "":
+                    # Insertar nuevo nodo al mapa
+                    nuevo_registro = pd.DataFrame([{"lat": n_lat, "lon": n_lon, "nombre_nodo": n_name}])
+                    st.session_state["nodos_locales"] = pd.concat([st.session_state["nodos_locales"], nuevo_registro], ignore_index=True)
+                    
+                    # Registrar la acción en la bitácora de auditoría
+                    nuevo_log = pd.DataFrame([{"Fecha/Hora": time.strftime("%Y-%m-%d %H:%M:%S"), "Operador": st.session_state["usuario_activo"], "Acción Ejecutada": f"Inyectó nodo: {n_name}"}])
+                    st.session_state["bitacora_logs"] = pd.concat([nuevo_log, st.session_state["bitacora_logs"]], ignore_index=True)
+                    
+                    st.success(f"Servidor '{n_name}' registrado en memoria cloud con éxito.")
+                    time.sleep(0.5)
+                    st.rerun()
+                else:
+                    st.error("El nombre del identificador no puede estar vacío.")
+
+    # 6. ENFOQUE DE INTELIGENCIA VIRTUAL
     st.markdown("---")
     st.markdown("#### 🤖 Área 2: Módulo de Enfoque de Inteligencia Virtual")
     enfoque_ia = st.radio(
-        "Seleccione el área de análisis:",
+        "Seleccione el área de análisis que desea que ejecute el sistema operativo principal:",
         ["Análisis de Telemetría Global", "Monitoreo de Logs de Seguridad", "Optimización de Tráfico de Nodos"]
     )
-    st.info(f"Módulo activo: **{enfoque_ia}**")
+    st.info(f"Módulo activo seleccionado actualmente: **{enfoque_ia}**")
+
+    # 7. NUEVO PANEL RECUPERADO DE AUDITORÍA HISTÓRICA
+    st.markdown("---")
+    st.markdown("#### 📑 Área 3: Registro Histórico y Logs de Auditoría Institucional")
+    st.dataframe(st.session_state["bitacora_logs"].head(5), use_container_width=True)
