@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# INFRAESTRUCTURA DE IDIOMAS DE LA INDUSTRIA (Matriz de Recursos Cerrada)
+# MATRIZ DE RECURSOS IDIOMÁTICOS CERRADA Y COMPLETA
 IDIOMAS_SOPORTADOS = {
     "es": {
         "name": "Español",
@@ -132,13 +132,13 @@ IDIOMAS_SOPORTADOS = {
             "lon": "Longitude Geográfica",
             "ident": "Nome Identificador do Canal ou Servidor",
             "execute": "EXECUTAR: Aprovisionar e Salvar",
-            "err_empty": "O nome do identificador não pode estar vazio.",
+            "err_empty": "O nome do identificador não puede estar vazio.",
             "success_reg": "registrado em memória cloud com sucesso.",
             "area2": "Área 2: Módulo de Foco de Inteligência Virtual",
             "select_analysis": "Selecione a área de análise que deseja que o sistema operacional principal execute:",
             "ana1": "Análise de Telemetria Global",
             "ana2": "Monitoramento de Logs de Segurança",
-            "ana3": "Otimização de Tráfico de Nodos",
+            "ana3": "Otimização de Tráfego de Nodos",
             "active_mod": "Módulo ativo selecionado atualmente",
             "monitor": "Visualizar Monitor de Carga e Tráfego Quântico",
             "flow": "Fluxo de pacotes de telemetria entre nodos ativos",
@@ -207,7 +207,7 @@ IDIOMAS_SOPORTADOS = {
 if "lang_code" not in st.session_state:
     st.session_state["lang_code"] = "es"
 
-# Motor de traducción instantáneo sin dependencias externas
+# Motor de traducción nativo
 def T(key):
     return IDIOMAS_SOPORTADOS.get(st.session_state["lang_code"], {}).get("data", {}).get(key, key)
 
