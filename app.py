@@ -112,7 +112,7 @@ IDIOMAS_SOPORTADOS = {
         "data": {
             "title": "SISTEMA OPERACIONAL QUANTUM ENTERPRISE",
             "subtitle": "Console de Comando de Serviços Integrados",
-            "lock": "🔒 O sistema operacional está bocado. Por favor, faça login na barra lateral.",
+            "lock": "🔒 O sistema operacional está bloqueado. Por favor, faça login na barra lateral.",
             "access": "Acesso Centralizado",
             "user": "ID do Usuário Operador",
             "pin": "PIN de Segurança (4 dígitos)",
@@ -139,7 +139,7 @@ IDIOMAS_SOPORTADOS = {
             "ana1": "Análise de Telemetria Global",
             "ana2": "Monitoramento de Logs de Segurança",
             "ana3": "Otimização de Tráfego de Nodos",
-            "active_mod": "Módulo ativo selecionado atualmente",
+            "active_mod": "Módulo ativo seleccionado atualmente",
             "monitor": "Visualizar Monitor de Carga e Tráfego Quântico",
             "flow": "Fluxo de pacotes de telemetria entre nodos ativos",
             "metric1": "Servidores Conectados",
