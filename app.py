@@ -102,7 +102,7 @@ if conn:
             
             # Crear administrador por defecto si la tabla está vacía (usuario: admin, pin: 1234)
             cursor.execute("SELECT COUNT(*) FROM usuarios_sistema;")
-            if cursor.fetchone()[0] == 0:
+            if cursor.fetchone() == 0:
                 pin_default_hash = hashlib.sha256(b"1234").hexdigest()
                 cursor.execute(
                     "INSERT INTO usuarios_sistema (usuario, pin_hash, rol) VALUES (%s, %s, %s);",
@@ -111,7 +111,7 @@ if conn:
             
             # Cargar nodos iniciales globales si no existen
             cursor.execute("SELECT COUNT(*) FROM nodos_mapa;")
-            if cursor.fetchone()[0] == 0:
+            if cursor.fetchone() == 0:
                 cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (40.7128, -74.0060, 'Nodo Central US');")
                 cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (34.0522, -118.2437, 'Nodo Pacifico US');")
                 cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (51.5074, -0.1278, 'Nodo Euro Core');")
@@ -163,7 +163,7 @@ if st.session_state["usuario_activo"] is None:
                         finally:
                             db_conn.close()
                 else:
-                    # Sistema de contingencia local para desarrollo
+                    # Sistema de contingencia local para desarrollo si Postgres no está listo
                     st.session_state["usuario_activo"] = u
                     st.rerun()
             else:
