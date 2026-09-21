@@ -65,7 +65,7 @@ st.markdown("""
 if "usuario_activo" not in st.session_state:
     st.session_state["usuario_activo"] = None
 
-# Inicializar datos locales en memoria por si la base de datos falla (Evita congelamientos)
+# Inicializar datos locales en memoria por si la base de datos falla
 if "nodos_locales" not in st.session_state:
     st.session_state["nodos_locales"] = pd.DataFrame([
         {"lat": 40.7128, "lon": -74.0060, "nombre_nodo": "Nodo Central US (Modo Seguro)"},
