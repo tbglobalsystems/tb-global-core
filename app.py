@@ -51,6 +51,13 @@ st.markdown("""
         border-left: 5px solid #0284c7;
         margin-bottom: 15px;
     }
+    .stButton>button {
+        width: 100% !important;
+        background-color: #0284c7 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -106,13 +113,13 @@ if conn:
         conn.commit()
         cursor.close()
         conn.close()
-        status = "PostgreSQL Conectado (Esquema Completo)"
+        status = "PostgreSQL Conectado"
     except:
         status = "Error al inicializar tablas"
 else:
     status = "DATABASE_URL no configurada"
 
-# 4. ENCABEZADO CORPORATIVO PRINCIPAL
+# ENCABEZADO CORPORATIVO
 st.markdown("""
 <div class="brand-container">
     <h1 class="brand-title">⚡ T&B Global</h1>
@@ -120,9 +127,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("### 📊 Consola de Comando e Infraestructura Unificada")
+st.markdown("### 📊 Consola de Comando de Servicios Integrados")
 
-# 5. RETORNO DE LA CERRADURA: ACCESO CENTRALIZADO EN LA BARRA LATERAL
+# 5. INICIO DE SESIÓN EN LA BARRA LATERAL
 if st.session_state["usuario_activo"] is None:
     st.warning("🔒 El sistema operativo se encuentra bloqueado. Inicie sesión en la barra lateral con sus credenciales de operador institucional para desbloquear todos los servicios determinados.")
     with st.sidebar:
@@ -138,7 +145,7 @@ if st.session_state["usuario_activo"] is None:
                 res = cursor.fetchone()
                 if res:
                     st.session_state["usuario_activo"] = u
-                    cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Inicio de sesión exitoso. Ecosistema de control desbloqueado.');", (u,))
+                    cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Inicio de sesión exitoso.');", (u,))
                     db_conn.commit()
                     cursor.close()
                     db_conn.close()
@@ -151,12 +158,12 @@ else:
     with st.sidebar:
         st.success(f"Operador en Línea: {st.session_state['usuario_activo']}")
         st.caption(f"Infraestructura Cloud: {status}")
-        if st.button("🔒 Cerrar Sesión Corporativa"):
+        if st.button("🔒 Cerrar Sesión"):
             st.session_state["usuario_activo"] = None
             st.rerun()
 
-    # RETORNO MÓDULO 1: PORTAL DE RED (EL MAPA GEOGRÁFICO DE NODOS)
-    st.markdown("#### 🌐 Monitoreo de Nodos Cuánticos y Distribución Global")
+    # ÁREA 1: MAPA GLOBAL Y CONTROLES GEOGRÁFICOS
+    st.markdown("#### 🌐 Área 1: Distribución Geográfica y Telemetría")
     db_conn = conectar_base_datos()
     df_nodos = pd.DataFrame(columns=['lat', 'lon', 'nombre_nodo'])
     if db_conn:
@@ -168,58 +175,65 @@ else:
             
     if not df_nodos.empty:
         st.map(df_nodos, zoom=1, use_container_width=True)
-        st.dataframe(df_nodos, use_container_width=True, hide_index=True)
-    else:
-        st.info("No se han cargado nodos dinámicos desde PostgreSQL.")
+    
+    # NUEVOS BOTONES INTERACTIVOS DE SELECCIÓN PARA EL MAPA
+    st.write("⚙️ **Controles del Mapa:**")
+    col_m1, col_st2, col_m3 = st.columns(3)
+    with col_m1:
+        if st.button("📍 Centrar en América del Norte"):
+            st.toast("Enfocando telemetría en US Core Nodos...", icon="🌎")
+    with col_st2:
+        if st.button("📍 Centrar en Región Europea"):
+            st.toast("Enfocando telemetría en Euro Link...", icon="🇪🇺")
+    with col_m3:
+        if st.button("📍 Centrar en Servidores de Asia"):
+            st.toast("Enfocando telemetría en Asia Core...", icon="🇯🇵")
 
-    # RETORNO MÓDULO 2: PASARELA STRIPE PREMIUM
-    st.write("---")
-    st.markdown("#### 💳 Pasarela Corporativa Global (Stripe Billing Integration)")
-    st.markdown("<div class='card-premium'><h5>Plan Único de Contenido OS</h5><p>Monitoreo de Canales + Acceso IA Ilimitado + Soporte Dedicado 24/7</p><b>$199 USD / mes</b></div>", unsafe_allow_html=True)
-    if st.button("Simular Pasarela: Suscribir Servicio Premium"):
-        with st.spinner("Procesando pago seguro en Stripe Cloud Gateway..."):
-            time.sleep(1.0)
-        st.success("✨ Transacción aprobada con éxito en Stripe Sandbox. ID de Cargo: ch_test_9A12B8")
-        db_conn = conectar_base_datos()
-        if db_conn:
-            cursor = db_conn.cursor()
-            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Suscripción corporativa simulada exitosamente vía Stripe.');", (st.session_state["usuario_activo"],))
-            db_conn.commit()
-            cursor.close()
-            db_conn.close()
-
-    # RETORNO MÓDULO 3: INGENIERÍA DE NODOS (INYECTOR GEOGRÁFICO AL MAPA EN VIVO)
-    st.write("---")
-    st.markdown("#### 🛰️ Inyección e Ingeniería de Nodos de Red")
-    with st.expander("Desplegar Consola de Registro Geográfico de Audiencia e Infraestructura", expanded=True):
+    # FORMULARIO CON BOTÓN REAL PARA INYECTAR NODOS
+    with st.expander("➕ Abrir Consola para Registrar Nuevo Servidor/Canal", expanded=True):
         with st.form("nuevo_nodo_form"):
-            n_lat = st.number_input("Latitud del Servidor / Audiencia:", value=0.0, format="%.4f")
-            n_lon = st.number_input("Longitud del Servidor / Audiencia:", value=0.0, format="%.4f")
-            n_name = st.text_input("Identificador de Canal o Nodo:")
-            btn_nodo = st.form_submit_button("Aprovisionar Nodo en Mapa")
+            n_lat = st.number_input("Latitud Geográfica:", value=0.0, format="%.4f")
+            n_lon = st.number_input("Longitud Geográfica:", value=0.0, format="%.4f")
+            n_name = st.text_input("Nombre identificador del Canal o Servidor:")
+            btn_nodo = st.form_submit_button("🚀 EJECUTAR: Aprovisionar y Guardar en Postgres")
             if btn_nodo and n_name != "":
                 db_conn = conectar_base_datos()
                 if db_conn:
                     try:
                         cursor = db_conn.cursor()
                         cursor.execute("INSERT INTO nodos_mapa (lat, lon, nombre_nodo) VALUES (%s, %s, %s);", (n_lat, n_lon, n_name))
-                        cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], f"Inyección de nodo geográfico completada para: {n_name}."))
+                        cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], f"Inyectó nodo: {n_name}"))
                         db_conn.commit()
                         cursor.close()
                         db_conn.close()
-                        st.success(f"⚡ Servidor '{n_name}' registrado. Refresque la página para visualizarlo en el mapa superior.")
+                        st.success(f"Servidor '{n_name}' registrado con éxito. Refresque para actualizar el mapa.")
                     except Exception as e:
                         st.error(f"Error: {e}")
 
-    # RETORNO MÓDULO 4: ORQUESTADOR CREWAI OPTIMIZADO PARA CREADORES
+    # ÁREA 2: PASARELA STRIPE CON BOTONES DE INTERACCIÓN REALES
     st.write("---")
-    st.markdown("#### 🤖 Optimización Algorítmica y Estrategia de Contenido (IA Engine)")
-    if st.button("🚀 Lanzar Auditoría de Canales e IA Autónoma"):
-        with st.spinner("Inicializando agentes cognitivos y analizando algoritmos multimedia..."):
-            time.sleep(1.5)
-        st.success("🤖 ¡Análisis de Canales Completado de forma óptima por la IA!")
-        st.info("Reporte Estratégico: Distribución en TikTok estable. Recomendación de Contenido: Ajustar el empaque (títulos y miniaturas) en los próximos videos largos de YouTube para aumentar la retención de audiencia en un 15%.")
+    st.markdown("#### 💳 Área 2: Pasarela Corporativa de Pagos (Stripe Gateway)")
+    
+    # selectbox que actúa como selector de planes real para el cliente
+    plan_seleccionado = st.selectbox("Seleccione el Nivel de Licencia a Operar:", ["Plan Básico OS ($49/mes)", "Plan Enterprise Premium ($199/mes)", "Plan Industrial Quantum ($299/mes)"])
+    
+    st.markdown(f"<div class='card-premium'><h5>Licencia Configurada: {plan_seleccionado}</h5><p>Aprovisionamiento automático de base de datos + cifrado de credenciales.</p></div>", unsafe_allow_html=True)
+    
+    if st.button("💳 EJECUTAR: Procesar Cobro Seguro en Stripe Sandbox"):
+        with st.spinner("Conectando de forma segura a Stripe Cloud..."):
+            time.sleep(1.0)
+        st.success(f"✨ Transacción aprobada en Stripe para el {plan_seleccionado}. ID de Cargo: ch_test_9A12B8")
         db_conn = conectar_base_datos()
         if db_conn:
             cursor = db_conn.cursor()
-            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, 'Auditoría algorítmica CrewAI ejecutada en el panel unificado.');", (st.session_state["usuario_activo"],))
+            cursor.execute("INSERT INTO logs_auditoria (usuario_operador, accion_ejecutada) VALUES (%s, %s);", (st.session_state["usuario_activo"], f"Simuló pago seguro vía Stripe para: {plan_seleccionado}"))
+            db_conn.commit()
+            cursor.close()
+            db_conn.close()
+
+    # ÁREA 3: INTELIGENCIA ARTIFICIAL CON CONTROLES INTERACTIVOS REALES
+    st.write("---")
+    st.markdown("#### 🤖 Área 3: Orquestación Algorítmica de Canales (CrewAI Core)")
+    
+    # Botones radiales interactivos para que la IA sepa qué buscar
+    enfoque_ia = st.radio("Seleccione el área de análisis que desea que eje
