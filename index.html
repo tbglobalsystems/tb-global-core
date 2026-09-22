@@ -1,1 +1,111 @@
+<!-- Selector de Periodo de Pago -->
+<div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 20px;">
+    <span id="label-mensual" style="font-weight: 700; color: #0284c7; font-size: 14px;">Mensual</span>
+    <label style="position: relative; display: inline-block; width: 50px; height: 26px;">
+        <input type="checkbox" id="billing-toggle" style="opacity: 0; width: 0; height: 0;" onchange="toggleBilling()">
+        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;">
+            <span id="toggle-circle" style="position: absolute; content: ''; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+        </span>
+    </label>
+    <span id="label-anual" style="font-weight: 600; color: #64748b; font-size: 14px;">Anual <span style="background-color: #16a34a; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px;">Ahorra 20%</span></span>
+</div>
 
+<!-- Reemplazo de tu pricing-grid enfocado en Agentes Cibernéticos -->
+<div class="pricing-grid">
+    <!-- Plan Básico -->
+    <div class="price-card selected" id="card-basic" onclick="selectPlan('basic')">
+        <h4 style="font-size: 16px; font-weight: 800; color: #0f172a;">Básico</h4>
+        <div style="margin: 8px 0;">
+            <span style="font-size: 24px; font-weight: 800; color: #0284c7;" id="price-basic">\$19</span>
+            <span style="font-size: 12px; color: #64748b;">/mes</span>
+        </div>
+        <p style="font-size: 11px; color: #475569;" id="desc-basic">Facturado mes a mes</p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 8px 0;">
+        <ul style="font-size: 11px; text-align: left; padding-left: 12px; color: #475569; line-height: 1.4;">
+            <li>1 Agente Cibernético activo</li>
+            <li>5 GB espacio de datos</li>
+            <li>500 consultas de soporte/mes</li>
+        </ul>
+    </div>
+
+    <!-- Plan Premium -->
+    <div class="price-card" id="card-premium" onclick="selectPlan('premium')">
+        <h4 style="font-size: 16px; font-weight: 800; color: #0f172a;">Premium</h4>
+        <div style="margin: 8px 0;">
+            <span style="font-size: 24px; font-weight: 800; color: #0284c7;" id="price-premium">\$49</span>
+            <span style="font-size: 12px; color: #64748b;">/mes</span>
+        </div>
+        <p style="font-size: 11px; color: #475569;" id="desc-premium">Facturado mes a mes</p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 8px 0;">
+        <ul style="font-size: 11px; text-align: left; padding-left: 12px; color: #475569; line-height: 1.4;">
+            <li>Hasta 3 Agentes en paralelo</li>
+            <li>50 GB espacio de datos</li>
+            <li>Consultas ilimitadas de texto</li>
+        </ul>
+    </div>
+
+    <!-- Plan Especial -->
+    <div class="price-card" id="card-special" onclick="selectPlan('special')">
+        <h4 style="font-size: 16px; font-weight: 800; color: #0f172a;">Especial</h4>
+        <div style="margin: 8px 0;">
+            <span style="font-size: 24px; font-weight: 800; color: #0284c7;" id="price-special">\$99</span>
+            <span style="font-size: 12px; color: #64748b;">/mes</span>
+        </div>
+        <p style="font-size: 11px; color: #475569;" id="desc-special">Facturado mes a mes</p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 8px 0;">
+        <ul style="font-size: 11px; text-align: left; padding-left: 12px; color: #475569; line-height: 1.4;">
+            <li>Hasta 10 Agentes simultáneos</li>
+            <li>500 GB espacio de datos</li>
+            <li>Flujos avanzados + Conexión API</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+function toggleBilling() {
+    const isAnnual = document.getElementById('billing-toggle').checked;
+    const circle = document.getElementById('toggle-circle');
+    const labelMensual = document.getElementById('label-mensual');
+    const labelAnual = document.getElementById('label-anual');
+    
+    if (isAnnual) {
+        circle.style.left = '28px';
+        labelAnual.style.color = '#0284c7';
+        labelAnual.style.fontWeight = '700';
+        labelMensual.style.color = '#64748b';
+        labelMensual.style.fontWeight = '600';
+        
+        document.getElementById('price-basic').innerText = '\$15';
+        document.getElementById('desc-basic').innerText = 'Cobrado \$180 al año';
+        
+        document.getElementById('price-premium').innerText = '\$39';
+        document.getElementById('desc-premium').innerText = 'Cobrado \$468 al año';
+        
+        document.getElementById('price-special').innerText = '\$79';
+        document.getElementById('desc-special').innerText = 'Cobrado \$948 al año';
+    } else {
+        circle.style.left = '4px';
+        labelMensual.style.color = '#0284c7';
+        labelMensual.style.fontWeight = '700';
+        labelAnual.style.color = '#64748b';
+        labelAnual.style.fontWeight = '600';
+        
+        document.getElementById('price-basic').innerText = '\$19';
+        document.getElementById('desc-basic').innerText = 'Facturado mes a mes';
+        
+        document.getElementById('price-premium').innerText = '\$49';
+        document.getElementById('desc-premium').innerText = 'Facturado mes a mes';
+        
+        document.getElementById('price-special').innerText = '\$99';
+        document.getElementById('desc-special').innerText = 'Facturado mes a mes';
+    }
+}
+
+function selectPlan(planType) {
+    document.getElementById('card-basic').classList.remove('selected');
+    document.getElementById('card-premium').classList.remove('selected');
+    document.getElementById('card-special').classList.remove('selected');
+    
+    document.getElementById('card-' + planType).classList.add('selected');
+}
+</script>
