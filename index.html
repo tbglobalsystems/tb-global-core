@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T&B Global - Omni-Suite Enterprise OS</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #ffffff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; min-height: 100vh; padding-bottom: 60px; }
+        
+        .lang-bar { background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .lang-btn { background-color: #ffffff; color: #0284c7; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; margin-left: 8px; }
+        
+        .brand-container { max-width: 1450px; margin: 24px auto; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; border-bottom: 4px solid #0284c7; text-align: center; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); }
+        .brand-title { font-size: 36px; font-weight: 800; color: #0284c7; }
+        .brand-subtitle { font-size: 12px; color: #64748b; text-transform: uppercase; margin-top: 8px; font-weight: 700; letter-spacing: 2px; }
+        
+        .tab-bar { max-width: 1450px; margin: 0 auto 20px auto; padding: 0 16px; display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
+        .tab-btn { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-bottom: none; padding: 12px 20px; font-weight: 700; border-radius: 8px 8px 0 0; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .tab-btn.active { background-color: #0284c7; color: white; border-color: #0284c7; }
+        
+        .main-container { max-width: 1450px; margin: 0 auto; padding: 0 16px; }
+        
+        .card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .section-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        
+        /* Contenedor principal de bloques estructurados */
+        .page-content-wrapper { display: flex; flex-direction: column; gap: 24px; }
+        
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%; }
+        @media (max-width: 992px) { .pricing-grid { grid-template-columns: 1fr; } }
+        
+        .price-card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; }
+        .price-card.selected { border: 2px solid #0284c7; background-color: #f0f9ff; box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.1); }
+        
+        .form-and-payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 12px; }
+        @media (max-width: 992px) { .form-and-payment-grid { grid-template-columns: 1fr; } }
+        
+        .form-panel { background-color: #ffffff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px; }
+        .kyc-form { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; border-top: 4px solid #0284c7; display: flex; flex-direction: column; gap: 16px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-label { font-weight: 600; color: #475569; font-size: 12px; text-align: left; }
+        .form-input { width: 100%; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; color: #1e293b; font-size: 14px; }
+        
+        .upload-box { border: 2px dashed #cbd5e1; padding: 20px; border-radius: 8px; text-align: center; background-color: #f8fafc; cursor: pointer; font-size: 13px; color: #475569; font-weight: 600; }
+        .btn-submit-payment { width: 100%; background-color: #16a34a; color: white; border: none; padding: 14px; font-size: 14px; font-weight: 800; border-radius: 6px; cursor: pointer; text-transform: uppercase; transition: background 0.2s; margin-top: 8px; }
+        .btn-submit-payment:hover { background-color: #15803d; }
+        
+        .captcha-container { background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 16px; border-radius: 8px; }
+        .captcha-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .captcha-img-box { background-color: #ffffff; border: 1px solid #cbd5e1; height: 65px; border-radius: 6px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 20px; position: relative; }
+        .captcha-img-box.selected { border: 2px solid #16a34a; background-color: #d1fae5; }
+        
+        .support-widget { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
+        .support-trigger { background-color: #0284c7; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.4); border: none; }
+        .support-panel { display: none; position: absolute; bottom: 75px; right: 0; width: 340px; height: 460px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); flex-direction: column; overflow: hidden; border-top: 4px solid #0284c7; }
+        .support-header { background-color: #f8fafc; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .support-chat-area { flex: 1; padding: 16px; overflow-y: auto; background-color: #f8fafc; font-size: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .chat-bubble { max-width: 85%; padding: 10px 12px; border-radius: 12px; line-height: 1.4; }
+        .chat-bubble.cyber { background-color: #ffffff; border: 1px solid #e2e8f0; color: #334155; align-self: flex-start; border-top-left-radius: 0; }
+        .chat-bubble.user { background-color: #0284c7; color: white; align-self: flex-end; border-top-right-radius: 0; }
+        .support-input-bar { padding: 12px; background-color: #ffffff; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; }
+    </style>
+</head>
+<body>
 
+    <!-- Barra de Idiomas -->
+    <div class="lang-bar">
+        <div style="font-weight: 600; color: #475569;">Enterprise System Environment</div>
+        <div>
+            Idiomas:
+            <button class="lang-btn">ES</button>
+            <button class="lang-btn" style="color: #64748b; font-weight: 500;">EN</button>
+        </div>
+    </div>
+
+    <!-- Contenedor de Marca -->
+    <div class="brand-container">
+        <h1 class="brand-title">T&B Global</h1>
+        <div class="brand-subtitle">Omni-Suite Enterprise OS</div>
+    </div>
+
+    <!-- Barra de Pestañas -->
+    <div class="tab-bar">
+        <button class="tab-btn active">Licencias e Inteligencia</button>
+        <button class="tab-btn">Consola de Control</button>
+        <button class="tab-btn">Historial de Logs</button>
+    </div>
+
+    <!-- Contenedor Principal -->
+    <div class="main-container">
+        
+        <div class="card">
+            <div class="section-title">
+                <span>🛡️</span> Suscripción Central e Integración de Cuentas
+            </div>
+            
+            <div class="page-content-wrapper">
+                
+                <!-- CONTROL DE FACTURACIÓN: Mensual / Anual -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <span id="label-mensual" style="font-weight: 700; color: #0284c7; font-size: 14px;">Mensual</span>
+                    <label style="position: relative; display: inline-block; width: 50px; height: 26px; cursor: pointer;">
+                        <input type="checkbox" id="billing-toggle" style="opacity: 0; width: 0; height: 0;" onchange="toggleBilling()">
+                        <span style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;">
+                            <span id="toggle-circle" style="position: absolute; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                        </span>
+                    </label>
+                    <span id="label-anual" style="font-weight: 600; color: #64748b; font-size: 14px;">Anual <span style="background-color: #16a34a; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px;">Ahorra 20%</span></span>
+                </div>
+
+                <!-- CUADRÍCULA DE PRECIOS COMPLETA -->
+                <div class="pricing-grid">
+                    
+                    <!-- Plan Básico -->
+                    <div class="price-card selected" id="card-basic" onclick="selectPlan('basic')">
+                        <div>
+                            <h4 style="font-size: 16px; font-weight: 800; color: #0f172a;">Básico</h4>
+                            <div style="margin: 8px 0;">
+                                <span style="font-size: 26px; font-weight: 800; color: #0284c7;" id="price-basic">\$19</span>
+                                <span style="font-size: 12px; color: #64748b;">/mes</span>
+                            </div>
+                            <p style="font-size: 11px; color: #475569; margin-bottom: 8px;" id="desc-basic">Facturado mes a mes</p>
+                            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 8px 0;">
+                        </div>
