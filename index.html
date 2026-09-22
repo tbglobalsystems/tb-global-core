@@ -1,1 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T&B Global - Enterprise OS</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Fondo Blanco Institucional */
+        body { background-color: #ffffff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; min-height: 100vh; padding-bottom: 50px; }
+        
+        /* Barra de Idiomas Superior Clara */
+        .lang-bar { background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .lang-btn { background-color: #ffffff; color: #0284c7; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; margin-left: 8px; }
+        .lang-btn:hover { background-color: #f1f5f9; }
+        
+        /* Encabezado Corporativo */
+        .brand-container { max-width: 1200px; margin: 24px auto; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; border-bottom: 4px solid #0284c7; text-align: center; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); }
+        .brand-title { font-size: 36px; font-weight: 800; color: #0284c7; }
+        .brand-subtitle { font-size: 12px; color: #64748b; text-transform: uppercase; margin-top: 8px; font-weight: 700; letter-spacing: 2px; }
+        
+        /* Contenedor Único Centrado */
+        .main-container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+        
+        /* Tarjetas Claras */
+        .card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .section-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+        .sub-title { font-size: 15px; font-weight: 700; color: #0284c7; margin: 16px 0 8px 0; }
+        .caption { font-size: 12px; color: #64748b; margin-bottom: 12px; }
+        
+        /* Mapeado y Telemetría */
+        .map-box { background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 60px 20px; text-align: center; border-radius: 8px; color: #0284c7; font-size: 15px; margin-bottom: 16px; font-weight: bold; border-left: 4px solid #0284c7; }
+        
+        /* Controles Abajo del Mapa */
+        .bottom-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+        @media (min-width: 768px) { .bottom-grid { grid-template-columns: 320px 1fr; } }
+        
+        /* Formularios y Botones Claros */
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-weight: 600; color: #475569; margin-bottom: 4px; font-size: 12px; }
+        .form-input { width: 100%; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; color: #0284c7; font-size: 14px; font-weight: bold; text-align: center; }
+        
+        .btn-secondary { width: 100%; background-color: #ffffff; border: 1px solid #cbd5e1; color: #334155; font-weight: 600; font-size: 12px; padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 12px; transition: all 0.2s; }
+        .btn-secondary:hover { background-color: #f8fafc; border-color: #0284c7; color: #0284c7; }
+        
+        .alert-demo { background-color: #e0f2fe; border: 1px solid #bae6fd; color: #0369a1; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+        
+        .focus-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+        .btn-focus { background-color: #ffffff; border: 1px solid #cbd5e1; color: #334155; font-size: 12px; font-weight: 600; padding: 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .btn-focus:hover { border-color: #0284c7; color: #0284c7; background-color: #f0f9ff; }
+        
+        /* Métricas */
+        .metric-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        @media (min-width: 480px) { .metric-grid { grid-template-columns: repeat(3, 1fr); } }
+        .metric-box { background-color: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; }
+        .metric-lbl { font-size: 12px; color: #64748b; font-weight: 500; }
+        .metric-val { font-size: 24px; font-weight: 700; color: #0f172a; display: block; margin-top: 4px; }
+        .metric-delta-green { font-size: 12px; color: #16a34a; font-weight: 600; display: block; margin-top: 2px; }
+        .metric-delta-red { font-size: 12px; color: #dc2626; font-weight: 600; display: block; margin-top: 2px; }
+        
+        .radio-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .radio-label { display: flex; align-items: center; gap: 8px; font-size: 14px; background-color: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; color: #334155; }
+        
+        .panel-content { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+        .terminal { font-family: monospace; font-size: 12px; background-color: #f8fafc; padding: 12px; border-radius: 6px; color: #334155; border: 1px solid #e2e8f0; line-height: 1.6; }
+        .progress-bar-bg { width: 100%; background-color: #e2e8f0; height: 16px; border-radius: 8px; overflow: hidden; margin-top: 8px; }
+        .progress-bar-fill { height: 100%; background-color: #0284c7; width: 45%; }
+        
+        .table-container { overflow-x: auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+        th { background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; padding: 12px; font-weight: 600; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        
+        .btn-export { background-color: #f1f5f9; color: #64748b; font-weight: 700; font-size: 12px; padding: 10px 16px; border: 1px dashed #cbd5e1; border-radius: 6px; cursor: pointer; width: 100%; }
+        .hidden { display: none !important; }
+        
+        /* Modal Corporativo de Bloqueo Seguro */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background-color: #ffffff; border-top: 4px solid #0284c7; border-radius: 16px; max-width: 450px; width: 100%; padding: 30px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .modal-title { font-size: 22px; font-weight: 800; color: #0284c7; margin-bottom: 12px; }
+        .modal-text { font-size: 14px; color: #475569; margin-bottom: 24px; line-height: 1.5; }
+        .btn-modal-close { background-color: #0284c7; color: white; border: none; padding: 10px 24px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .btn-modal-close:hover { background-color: #0369a1; }
+    </style>
+</head>
+<body>
 
+    <!-- MENÚ DE IDIOMAS GLOBAL -->
+    <div class="lang-bar">
+        <span>🌍 Quick Language Access / Entrada de Idiomas:</span>
+        <div>
+            <button onclick="changeLang('en')" class="lang-btn">🇺🇸 English (US)</button>
+            <button onclick="changeLang('es')" class="lang-btn">🇪🇸 Español</button>
+        </div>
+    </div>
+
+    <!-- LOGO CORPORATIVO PRINCIPAL -->
+    <div class="brand-container">
+        <h1 class="brand-title">⚡ T&B Global</h1>
+        <p id="system-title" class="brand-subtitle">QUANTUM ENTERPRISE OPERATING SYSTEM</p>
+    </div>
+
+    <!-- CONTENEDOR DE LA INTERFAZ -->
+    <div class="main-container">
+        
+        <!-- MAPA COLOCADO EN LA CIMA (JUSTO DEBAJO DEL LOGO) -->
+        <div class="card">
+            <h2 id="title-area1" class="section-title">🌐 Área 1: Distribución Geográfica y Telemetría</h2>
+            <div class="map-box">
+                🗺️ [MAPA SATELITAL QUANTUM CORE EN VIVO]<br>
+                <span style="color:#64748b; font-weight:normal; font-size:12px; display:block; margin-top:6px;">Desplegando coordenadas activas de nodos norteamericanos y europeos...</span>
+            </div>
+            
+            <p id="txt-focus" class="form-label" style="font-weight: 700; margin-bottom: 8px;">Controles de Enfoque de Telemetría (Prueba del Sistema):</p>
+            <div class="focus-grid">
+                <button onclick="triggerPremiumBlock('Cambio de Enfoque de Telemetría Satelital')" class="btn-focus">📍 América del Norte</button>
+                <button onclick="triggerPremiumBlock('Cambio de Enfoque de Telemetría Satelital')" class="btn-focus">📍 Región Europea</button>
+                <button onclick="triggerPremiumBlock('Cambio de Enfoque de Telemetría Satelital')" class="btn-focus">📍 Servidores de Asia</button>
+            </div>
+
+            <!-- MONITOR DE TRÁFICO -->
+            <h3 id="title-monitor" class="sub-title">📈 Monitor de Carga y Tráfico Cuántico Activo</h3>
+            <p id="txt-flow" class="caption">📡 Flujo de paquetes telemetritos entre nodos activos:</p>
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <span id="m1-lbl" class="metric-lbl">Servidores Conectados</span>
+                    <span class="metric-val">3 Nodos</span>
+                    <span class="metric-delta-green">● Muestra Activa</span>
+                </div>
+                <div class="metric-box">
+                    <span id="m2-lbl" class="metric-lbl">Ancho de Banda Asignado</span>
+                    <span class="metric-val">135 Gbps</span>
