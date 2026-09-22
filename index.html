@@ -1,1 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T&B Global - Enterprise OS</title>
+    <!-- Tailwind CSS Estable v3 (Soluciona la pantalla en blanco) -->
+    <script src="https://tailwindcss.com"></script>
+    <!-- Chart.js Estable para métricas de inteligencia virtual -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Leaflet Estable para el mapa de telemetría geográfico -->
+    <link rel="stylesheet" href="https://jsdelivr.net" />
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        .brand-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            border-bottom: 4px solid #0284c7;
+        }
+        #map { height: 350px; border-radius: 12px; z-index: 1; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
 
+    <!-- SELECTOR DE IDIOMAS SUPERIOR -->
+    <div class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex justify-between items-center text-sm">
+        <span>🌍 Quick Language Access / Entrada de Idiomas:</span>
+        <div class="flex gap-4">
+            <button onclick="changeLang('en')" class="bg-slate-800 hover:bg-slate-700 text-sky-400 px-3 py-1.5 rounded font-semibold transition cursor-pointer">🇺🇸 English (US Core)</button>
+            <button onclick="changeLang('es')" class="bg-slate-800 hover:bg-slate-700 text-sky-400 px-3 py-1.5 rounded font-semibold transition cursor-pointer">🇪🇸 Español (Global)</button>
+        </div>
+    </div>
+
+    <!-- ENCABEZADO CORPORATIVO -->
+    <div class="brand-gradient max-w-7xl mx-auto my-6 p-6 rounded-xl border border-slate-800 text-center">
+        <h1 class="text-4xl font-extrabold text-sky-400 tracking-tight">⚡ T&B Global</h1>
+        <p id="system-title" class="text-xs uppercase text-slate-400 tracking-widest font-semibold mt-2">QUANTUM ENTERPRISE OPERATING SYSTEM</p>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-6 pb-12">
+        
+        <!-- SIDEBAR DE CONTROL -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 h-fit">
+            <div id="login-section">
+                <h3 class="text-md font-bold text-sky-400 mb-4 border-b border-slate-800 pb-2">🔐 Acceso Centralizado</h3>
+                <div class="mb-4">
+                    <label id="lbl-user" class="block text-xs font-semibold mb-1 text-slate-400">ID de Usuario Operador</label>
+                    <input type="text" id="username" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div class="mb-4">
+                    <label id="lbl-pin" class="block text-xs font-semibold mb-1 text-slate-400">PIN de Seguridad (4 dígitos)</label>
+                    <input type="password" id="pin" maxlength="4" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <button onclick="handleLogin()" id="btn-login" class="w-full bg-sky-600 hover:bg-sky-500 font-bold text-sm py-2 rounded text-white transition cursor-pointer">Validar Credenciales</button>
+            </div>
+
+            <div id="vault-section" class="hidden">
+                <div class="bg-emerald-950/30 border border-emerald-800 text-emerald-400 px-3 py-2 rounded text-sm mb-4 font-semibold">
+                    ✅ Operador: <span id="active-user-display">admin_tb</span>
+                </div>
+                <h3 class="text-md font-bold text-sky-400 mb-4 border-b border-slate-800 pb-2">📥 Owner Document Vault</h3>
+                <button onclick="downloadDoc('Acta Legal', 'ACTA OFICIAL DE ENTREGA DE PROPIEDAD INTELECTUAL - T&B GLOBAL')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs py-2 rounded mb-3 transition cursor-pointer">📄 Descargar Acta Legal</button>
+                <button onclick="downloadDoc('Manual Usuario', 'MANUAL DE OPERACION TECNICA - INFRAESTRUCTURA QUANTUM')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs py-2 rounded mb-4 transition cursor-pointer">📘 Descargar Manual de Usuario</button>
+                <button onclick="handleLogout()" id="btn-logout" class="w-full bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800 text-rose-400 text-xs font-bold py-1.5 rounded transition cursor-pointer">🔒 Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <!-- PANELES DE CONTROL OPERATIVOS (DESBLOQUEABLES) -->
+        <div id="main-dashboard" class="md:col-span-3 opacity-20 pointer-events-none transition-all duration-300">
+            
+            <!-- ÁREA 1: TELEMETRÍA Y MAPA -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+                <h2 id="title-area1" class="text-lg font-bold text-slate-200 mb-4">🌐 Área 1: Distribución Geográfica y Telemetría</h2>
+                <div id="map" class="mb-4 bg-slate-950 border border-slate-800"></div>
+                
+                <p id="txt-focus" class="text-xs font-bold text-slate-400 mb-2">Controles de Enfoque de Telemetría:</p>
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <button onclick="focusMap([40.7128, -74.0060], 5)" class="bg-sky-950/40 border border-sky-800 text-sky-400 text-xs font-semibold py-2 rounded hover:bg-sky-900/40 transition cursor-pointer">📍 América del Norte</button>
+                    <button onclick="focusMap([51.5074, -0.1278], 5)" class="bg-sky-950/40 border border-sky-800 text-sky-400 text-xs font-semibold py-2 rounded hover:bg-sky-900/40 transition cursor-pointer">📍 Región Europea</button>
+                    <button onclick="focusMap([35.6762, 139.6503], 5)" class="bg-sky-950/40 border border-sky-800 text-sky-400 text-xs font-semibold py-2 rounded hover:bg-sky-900/40 transition cursor-pointer">📍 Servidores de Asia</button>
+                </div>
+
+                <!-- MÉTRICAS CUÁNTICAS -->
+                <h3 id="title-monitor" class="text-sm font-bold text-sky-400 mb-1">📈 Monitor de Carga y Tráfico Cuántico Activo</h3>
+                <p id="txt-flow" class="text-xs text-slate-400 mb-4">📡 Flujo de paquetes telemetritos entre nodos activos:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-950 p-4 rounded-lg border border-slate-800">
+                        <span id="m1-lbl" class="text-xs text-slate-400 block font-medium">Servidores Conectados</span>
+                        <span class="text-2xl font-bold text-slate-100 block mt-1">3 Nodos</span>
+                        <span class="text-xs text-emerald-400 font-semibold">● Active Cloud</span>
+                    </div>
+                    <div class="bg-slate-950 p-4 rounded-lg border border-slate-800">
+                        <span id="m2-lbl" class="text-xs text-slate-400 block font-medium">Ancho de Banda Asignado</span>
+                        <span class="text-2xl font-bold text-slate-100 block mt-1">135 Gbps</span>
+                        <span class="text-xs text-rose-400 font-semibold">▲ Peak Load Capped</span>
+                    </div>
+                    <div class="bg-slate-950 p-4 rounded-lg border border-slate-800">
+                        <span id="m3-lbl" class="text-xs text-slate-400 block font-medium">Latencia Global Media</span>
+                        <span class="text-2xl font-bold text-slate-100 block mt-1">18.4 ms</span>
+                        <span class="text-xs text-emerald-400 font-semibold">▼ -1.2ms Optimal</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÁREA 2: INTELIGENCIA VIRTUAL -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+                <h2 id="title-area2" class="text-lg font-bold text-slate-200 mb-4">🤖 Área 2: Módulo de Enfoque de Inteligencia Virtual</h2>
+                <p id="txt-select-a" class="text-xs font-semibold text-slate-400 mb-3">Seleccione el área de análisis que desea que ejecute el sistema operativo principal:</p>
+                <div class="flex flex-col gap-2 mb-4">
+                    <label class="flex items-center gap-2 text-sm bg-slate-950 p-2.5 rounded border border-slate-800 cursor-pointer text-slate-300">
+                        <input type="radio" name="analysis" value="t1" checked onclick="toggleAnalysis('t1')"> <span id="opt-ana1">Análisis de Telemetría Global</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-sm bg-slate-950 p-2.5 rounded border border-slate-800 cursor-pointer text-slate-300">
+                        <input type="radio" name="analysis" value="t2" onclick="toggleAnalysis('t2')"> <span id="opt-ana2">Monitoreo de Logs de Seguridad</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-sm bg-slate-950 p-2.5 rounded border border-slate-800 cursor-pointer text-slate-300">
+                        <input type="radio" name="analysis" value="t3" onclick="toggleAnalysis('t3')"> <span id="opt-ana3">Optimización de Tráfico de Nodos</span>
+                    </label>
+                </div>
+
+                <!-- CONTENEDORES DINÁMICOS DE INTELIGENCIA -->
+                <div class="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                    <div id="panel-t1">
+                        <h4 class="text-xs font-bold text-sky-400 mb-3">📊 Telemetry Diagnostics Metrics</h4>
+                        <div style="width: 100%; height: 200px; position: relative;">
+                            <canvas id="chart-telemetry"></canvas>
+                        </div>
+                    </div>
